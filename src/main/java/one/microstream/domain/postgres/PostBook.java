@@ -1,32 +1,35 @@
-package one.microstream.domain.microstream;
+package one.microstream.domain.postgres;
 
-public class Book
+import io.micronaut.serde.annotation.Serdeable;
+import jakarta.persistence.*;
+
+@Serdeable
+@Entity
+@Cacheable(true)
+@Table(name = "books", schema = "public")
+public class PostBook
 {
-    private String isbn;
-    private Integer postId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer			id;
     private String title;
     private String author;
     private String genre;
+    private String isbn;
     private int pages;
 
-    public Book() {
+    public PostBook() {
     }
 
-    public Book(String isbn, Integer postId, String title, String author, String genre, int pages) {
-        this.isbn = isbn;
-        this.postId = postId;
-        this.title = title;
-        this.author = author;
-        this.genre = genre;
-        this.pages = pages;
+    public PostBook(String title, String author, String genre, String isbn, int pages) {
     }
 
-    public Integer getPostId() {
-        return postId;
+    public Integer getId() {
+        return id;
     }
 
-    public void setPostId(Integer postId) {
-        this.postId = postId;
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getTitle() {
