@@ -34,12 +34,12 @@
 	</repositories>
 
 	<dependencies>
-        <dependency>
-            <groupId>one.microstream</groupId>
-            <artifactId>microstream-enterprise-cluster-nodelibrary-micronaut</artifactId>
-            <version>${microstream.nodelibrary.version}</version>
-        </dependency>
-        
+		<dependency>
+			<groupId>one.microstream</groupId>
+			<artifactId>microstream-enterprise-cluster-nodelibrary-micronaut</artifactId>
+			<version>${microstream.nodelibrary.version}</version>
+		</dependency>
+
 		<dependency>
 			<groupId>io.micronaut</groupId>
 			<artifactId>micronaut-http-server-netty</artifactId>
@@ -96,6 +96,12 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.7.5</version>
 		</dependency>
 
 		<!-- Hibernate / JPA -->

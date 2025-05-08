@@ -7,8 +7,12 @@ import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Post;
 import jakarta.inject.Inject;
+import one.microstream.core.mapper.MapperBook;
 import one.microstream.dao.microstream.DAOBook;
+import one.microstream.dao.microstream.postgres.PostDAOBook;
 import one.microstream.domain.microstream.Book;
+import one.microstream.domain.postgres.PostBook;
+import one.microstream.dto.DtoBook;
 import one.microstream.repositories.RepoBook;
 
 @Controller("/books")
@@ -17,7 +21,9 @@ public class BookController
     @Inject
     DAOBook daoBook;
     @Inject
-    private RepoBook repoBook;
+    PostDAOBook postDAOBook;
+    @Inject
+    MapperBook mapperBook;
 
     @Get()
     HttpResponse<?> findAll()
@@ -26,14 +32,21 @@ public class BookController
     }
 
     @Post
-    HttpResponse<?> insert(@Body Book book)
+    HttpResponse<?> insert(@Body DtoBook dto)
     {
         // PostgreSQL Save
-        Book saved = repoBook.save(book);
+        PostBook inserted = postDAOBook.insert(dto);
 
         // Mirostream store
-        daoBook.insert(book);
+        daoBook.insert(mapperBook.toNewMSBook(dto));
 
-        return HttpResponse.ok(saved);
+        return HttpResponse.ok(inserted);
+    }
+
+    @Post("/postgresOnly")
+    HttpResponse<?> insertPostgresOnly(@Body DtoBook dto)
+    {
+        PostBook inserted = postDAOBook.insert(dto);
+        return HttpResponse.ok(inserted);
     }
 }
