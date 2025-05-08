@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import io.micronaut.scheduling.annotation.Scheduled;
 import jakarta.inject.Singleton;
 import one.microstream.enterprise.cluster.nodelibrary.common.ClusterStorageManager;
+import one.microstream.enterprise.cluster.nodelibrary.common.impl._default.NodeDefaultClusterStorageManager;
 
 @Singleton
 public class DistributionCheckJob
@@ -15,6 +16,10 @@ public class DistributionCheckJob
 	@Scheduled(fixedDelay = "5s")
 	void checkDistribution(final ClusterStorageManager<?> storage)
 	{
-		LOG.info("Distribution: {}", storage.isDistributor());
+		// other managers like the local or backup do not support this check
+		if (storage instanceof NodeDefaultClusterStorageManager)
+		{
+			LOG.info("Distribution: {}", storage.isDistributor());
+		}
 	}
 }
