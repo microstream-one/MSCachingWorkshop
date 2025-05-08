@@ -1,18 +1,13 @@
 package one.microstream.dao.microstream;
 
 import io.micronaut.eclipsestore.RootProvider;
-import io.micronaut.serde.ObjectMapper;
 import jakarta.inject.Inject;
-import one.microstream.core.init.DatabaseEvent;
 import one.microstream.dao.microstream.postgres.PostDAOBook;
 import one.microstream.domain.microstream.Book;
 import one.microstream.domain.microstream.Company;
 import one.microstream.domain.postgres.PostBook;
-import org.eclipse.store.storage.types.Database;
 import org.eclipse.store.storage.types.StorageManager;
-import org.postgresql.PGNotification;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,33 +20,6 @@ public class DAOBook
 	StorageManager storageManager;
 	@Inject
 	PostDAOBook postDAOBook;
-	@Inject
-	ObjectMapper objectMapper;
-
-
-	public void insert(final PGNotification notification)
-	{
-		String parameter = notification.getParameter();
-
-        try
-		{
-			DatabaseEvent created = objectMapper.readValue(parameter, DatabaseEvent.class);
-
-			Book book = new Book();
-			book.setPostId(created.getData().getId());
-			book.setTitle(created.getData().getTitle());
-			book.setAuthor(created.getData().getAuthor());
-			book.setPages(created.getData().getPages());
-			book.setGenre(created.getData().getGenre());
-
-			company.root().getBooks().add(book);
-			storageManager.store(company.root().getBooks());
-		}
-		catch (IOException e)
-		{
-            throw new RuntimeException(e);
-        }
-    }
 
 	public List<Book> findAll()
 	{
