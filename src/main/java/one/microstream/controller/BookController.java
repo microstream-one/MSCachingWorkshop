@@ -33,21 +33,9 @@ public class BookController
         return HttpResponse.ok(daoBook.findAll());
     }
 
-    @Post
-    HttpResponse<?> insert(@Body DtoBook dto)
-    {
-        // PostgreSQL Save
-        PostBook inserted = postDAOBook.insert(dto);
-
-        // Mirostream store
-        daoBook.insert(mapperBook.toNewMSBook(dto));
-
-        return HttpResponse.ok(inserted);
-    }
-
-    @Post("/postgresOnly")
+    @Post()
     @ExecuteOn(TaskExecutors.BLOCKING)
-    HttpResponse<?> insertPostgresOnly(@Body DtoBook dto)
+    HttpResponse<?> insert(@Body DtoBook dto)
     {
         PostBook inserted = postDAOBook.insert(dto);
         return HttpResponse.ok(inserted);
