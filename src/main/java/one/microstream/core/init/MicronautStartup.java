@@ -1,8 +1,23 @@
 package one.microstream.core.init;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+
+import javax.sql.DataSource;
+
+import org.postgresql.PGConnection;
+import org.postgresql.PGNotification;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.micronaut.context.event.ApplicationEventListener;
 import io.micronaut.data.connection.annotation.Connectable;
-import io.micronaut.runtime.server.event.ServerStartupEvent;
+import io.micronaut.runtime.event.ApplicationStartupEvent;
+import io.micronaut.runtime.server.event.ServerShutdownEvent;
 import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -11,21 +26,8 @@ import one.microstream.dao.microstream.DAOBook;
 import one.microstream.enterprise.cluster.nodelibrary.common.ClusterStorageManager;
 import one.microstream.enterprise.cluster.nodelibrary.common.impl._default.NodeDefaultClusterStorageManager;
 
-import org.postgresql.PGConnection;
-import org.postgresql.PGNotification;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-
 @Singleton
-public class MicronautStartup implements ApplicationEventListener<ServerStartupEvent> {
+public class MicronautStartup implements ApplicationEventListener<Object> {
 
     private static final Logger LOG = LoggerFactory.getLogger(MicronautStartup.class);
 
@@ -44,18 +46,20 @@ public class MicronautStartup implements ApplicationEventListener<ServerStartupE
     
     @Override
     @Connectable
-    public void onApplicationEvent(final ServerStartupEvent event) {
-        try {
-            this.initializeListener();
-        } catch (final SQLException e) {
-            throw new RuntimeException("Error starting PostgreSQL listener", e);
-        }
+    public void onApplicationEvent(final Object event) {
+    	 if (event instanceof ApplicationStartupEvent)
+         {
+             try {
+                 this.initializeListener();
+             } catch (final SQLException e) {
+                 throw new RuntimeException("Error starting PostgreSQL listener", e);
+             }
+         }
+         else if (event instanceof ServerShutdownEvent)
+         {
+             this.shutdown();
+         }
 
-    }
-
-    @Override
-    public boolean supports(final ServerStartupEvent event) {
-        return ApplicationEventListener.super.supports(event);
     }
 
     private void initializeListener() throws SQLException {
@@ -94,9 +98,14 @@ public class MicronautStartup implements ApplicationEventListener<ServerStartupE
         	this.daoBook.insert(notification);
 		}
     }
-
+    
     @PreDestroy
     public void stop() {
+        this.shutdown();
+    }
+
+    @Connectable
+    public void shutdown() {
         this.running = false;
         try {
             if ((this.connection != null) && !this.connection.isClosed()) {
