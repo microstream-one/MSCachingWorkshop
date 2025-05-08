@@ -16,7 +16,8 @@ public class PostDAOBook
 
     public PostBook insert(DtoBook book)
     {
-        PostBook saved = repoBook.save(mapperBook.toNewPostBook(book));
+        PostBook newPostBook = mapperBook.toNewPostBook(book);
+        PostBook saved = repoBook.save(newPostBook);
         return saved;
     }
 

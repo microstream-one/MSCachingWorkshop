@@ -181,6 +181,10 @@
                 </exclusion>
               </exclusions>
             </path>
+            <path>
+              <groupId>io.micronaut.data</groupId>
+              <artifactId>micronaut-data-processor</artifactId>
+            </path>
           </annotationProcessorPaths>
           <compilerArgs>
             <arg>-Amicronaut.processing.group=one.microstream</arg>

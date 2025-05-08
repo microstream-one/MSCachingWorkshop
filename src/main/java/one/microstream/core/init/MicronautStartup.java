@@ -7,7 +7,6 @@ import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import one.microstream.dao.microstream.DAOBook;
 import org.postgresql.PGConnection;
 import org.postgresql.PGNotification;
 import org.slf4j.Logger;
@@ -26,8 +25,6 @@ public class MicronautStartup implements ApplicationEventListener<ServerStartupE
 
     private static final Logger LOG = LoggerFactory.getLogger(MicronautStartup.class);
 
-    @Inject
-    DAOBook daoBook;
     @Inject
     DataSource dataSource;
     @Inject
@@ -87,6 +84,7 @@ public class MicronautStartup implements ApplicationEventListener<ServerStartupE
         // Process your notification here
     }
 
+    @Connectable
     @PreDestroy
     public void stop() {
         running = false;
