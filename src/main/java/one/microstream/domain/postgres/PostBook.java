@@ -21,12 +21,12 @@ public class PostBook
     public PostBook() {
     }
 
-    public PostBook(String title, String author, String genre, String isbn, int pages) {
-        this.isbn = isbn;
-        this.title = title;
-        this.author = author;
-        this.genre = genre;
-        this.pages = pages;
+    public PostBook(final String title, final String author, final String genre, final String isbn, final int pages) {
+    	this.title = title;
+    	this.author = author;
+    	this.genre = genre;
+    	this.isbn = isbn;
+    	this.pages = pages;
     }
 
     public Integer getId() {

@@ -1,12 +1,13 @@
 package one.microstream.dao.microstream.postgres;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import one.microstream.core.mapper.MapperBook;
-import one.microstream.domain.microstream.Book;
 import one.microstream.domain.postgres.PostBook;
 import one.microstream.dto.DtoBook;
 import one.microstream.repositories.RepoBook;
 
+@Singleton
 public class PostDAOBook
 {
     @Inject
@@ -14,10 +15,9 @@ public class PostDAOBook
     @Inject
     MapperBook mapperBook;
 
-    public PostBook insert(DtoBook book)
+    public PostBook insert(final DtoBook book)
     {
-        PostBook newPostBook = mapperBook.toNewPostBook(book);
-        PostBook saved = repoBook.save(newPostBook);
+        final PostBook saved = this.repoBook.save(this.mapperBook.toNewPostBook(book));
         return saved;
     }
 

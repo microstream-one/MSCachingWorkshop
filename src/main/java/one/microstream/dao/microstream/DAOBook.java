@@ -5,24 +5,30 @@ import jakarta.inject.Inject;
 import one.microstream.domain.microstream.Book;
 import one.microstream.domain.microstream.Company;
 import org.eclipse.store.storage.types.StorageManager;
+import org.postgresql.PGNotification;
 
 import java.util.List;
 
 public class DAOBook
 {
-    @Inject
-    RootProvider<Company> company;
-    @Inject
-    StorageManager storageManager;
+	@Inject
+	RootProvider<Company> company;
+	@Inject
+	StorageManager storageManager;
 
-    public List<Book> findAll()
-    {
-        return company.root().getBooks();
-    }
+	public void insert(final PGNotification notification)
+	{
+		// TODO: Implementation of updating an existing book
+	}
 
-    public void insert(Book book)
-    {
-        company.root().getBooks().add(book);
-        storageManager.store(book);
-    }
+	public List<Book> findAll()
+	{
+		return this.company.root().getBooks();
+	}
+
+	public void insert(final Book book)
+	{
+		this.company.root().getBooks().add(book);
+		this.storageManager.store(book);
+	}
 }

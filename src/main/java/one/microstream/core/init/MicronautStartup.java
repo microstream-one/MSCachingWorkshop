@@ -1,18 +1,5 @@
 package one.microstream.core.init;
 
-import io.micronaut.context.event.ApplicationEventListener;
-import io.micronaut.data.connection.annotation.Connectable;
-import io.micronaut.runtime.server.event.ServerStartupEvent;
-import jakarta.annotation.PreDestroy;
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Singleton;
-import org.postgresql.PGConnection;
-import org.postgresql.PGNotification;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -20,80 +7,112 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
+import javax.sql.DataSource;
+
+import org.postgresql.PGConnection;
+import org.postgresql.PGNotification;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.micronaut.context.event.ApplicationEventListener;
+import io.micronaut.data.connection.annotation.Connectable;
+import io.micronaut.runtime.event.ApplicationStartupEvent;
+import io.micronaut.runtime.server.event.ServerShutdownEvent;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
+import one.microstream.dao.microstream.DAOBook;
+import one.microstream.enterprise.cluster.nodelibrary.common.ClusterStorageManager;
+import one.microstream.enterprise.cluster.nodelibrary.common.impl._default.NodeDefaultClusterStorageManager;
+
 @Singleton
-public class MicronautStartup implements ApplicationEventListener<ServerStartupEvent> {
+public class MicronautStartup implements ApplicationEventListener<Object> {
 
     private static final Logger LOG = LoggerFactory.getLogger(MicronautStartup.class);
 
+    @Inject
+    DAOBook daoBook;
     @Inject
     DataSource dataSource;
     @Inject
     @Named("pg-listener")
     ExecutorService executorService;
+    @Inject
+    ClusterStorageManager<?> storageManager;
 
     private Connection connection;
     private volatile boolean running = true;
-
+    
     @Override
     @Connectable
-    public void onApplicationEvent(ServerStartupEvent event) {
-        try {
-            initializeListener();
-        } catch (SQLException e) {
-            throw new RuntimeException("Error starting PostgreSQL listener", e);
-        }
+    public void onApplicationEvent(final Object event) {
+    	 if (event instanceof ApplicationStartupEvent)
+         {
+             try {
+                 this.initializeListener();
+             } catch (final SQLException e) {
+                 throw new RuntimeException("Error starting PostgreSQL listener", e);
+             }
+         }
+         else if (event instanceof ServerShutdownEvent)
+         {
+             this.shutdown();
+         }
 
-    }
-
-    @Override
-    public boolean supports(ServerStartupEvent event) {
-        return ApplicationEventListener.super.supports(event);
     }
 
     private void initializeListener() throws SQLException {
-        this.connection = dataSource.getConnection();
-        PGConnection pgConnection = connection.unwrap(PGConnection.class);
+        this.connection = this.dataSource.getConnection();
+        final PGConnection pgConnection = this.connection.unwrap(PGConnection.class);
 
-        try (Statement stmt = connection.createStatement()) {
+        try (Statement stmt = this.connection.createStatement()) {
             stmt.execute("LISTEN data_changed");
         }
         LOG.info("LISTEN to channel 'data_changed'");
 
-        executorService.submit(() -> pollNotifications(pgConnection));
+        this.executorService.submit(() -> this.pollNotifications(pgConnection));
     }
 
-    private void pollNotifications(PGConnection pgConnection) {
-        while (running) {
+    private void pollNotifications(final PGConnection pgConnection) {
+        while (this.running) {
             try {
                 Optional.ofNullable(pgConnection.getNotifications(5000))
                         .stream()
                         .flatMap(Arrays::stream)
                         .forEach(this::handleNotification);
-            } catch (SQLException e) {
+            } catch (final SQLException e) {
                 LOG.error("Error retrieving notifications", e);
             }
         }
     }
 
-    private void handleNotification(PGNotification notification) {
-        String channel = notification.getName();
-        String payload = notification.getParameter();
+    private void handleNotification(final PGNotification notification) {
+        final String channel = notification.getName();
+        final String payload = notification.getParameter();
 
         LOG.info("Received notification on channel {}: {}", channel, payload);
 
-        // Process your notification here
+        if ((this.storageManager instanceof NodeDefaultClusterStorageManager) && this.storageManager.isDistributor())
+		{
+        	this.daoBook.insert(notification);
+		}
+    }
+    
+    @PreDestroy
+    public void stop() {
+        this.shutdown();
     }
 
     @Connectable
-    @PreDestroy
-    public void stop() {
-        running = false;
+    public void shutdown() {
+        this.running = false;
         try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
+            if ((this.connection != null) && !this.connection.isClosed()) {
+                this.connection.close();
                 LOG.info("PostgreSQL listener connection closed");
             }
-        } catch (SQLException e) {
+        } catch (final SQLException e) {
             LOG.warn("Error closing PostgreSQL connection", e);
         }
     }
