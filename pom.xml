@@ -23,13 +23,19 @@
 		<eclipsestore.version>2.1.3</eclipsestore.version>
 		<micronaut.aot.packageName>one.microstream.aot.generated</micronaut.aot.packageName>
 		<exec.mainClass>one.microstream.Application</exec.mainClass>
-		<microstream.nodelibrary.version>[1.0,2.0)</microstream.nodelibrary.version>
+		<microstream.nodelibrary.version>1.9.0</microstream.nodelibrary.version>
 	</properties>
 
 	<repositories>
 		<repository>
 			<id>central</id>
 			<url>https://repo.maven.apache.org/maven2</url>
+		</repository>
+
+		<repository>
+			<id>ms-ee</id>
+			<name>Microstream Enterprise Releases</name>
+			<url>https://repo.microstream.one/repository/ms-ee/</url>
 		</repository>
 	</repositories>
 
