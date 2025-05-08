@@ -40,6 +40,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>one.microstream</groupId>
+      <artifactId>microstream-enterprise-cluster-nodelibrary-micronaut</artifactId>
+      <version>${microstream.nodelibrary.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>io.micronaut</groupId>
       <artifactId>micronaut-http-server-netty</artifactId>
       <scope>compile</scope>
@@ -53,11 +59,6 @@
       <groupId>io.micronaut.eclipsestore</groupId>
       <artifactId>micronaut-eclipsestore-annotations</artifactId>
       <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.store</groupId>
-      <artifactId>storage-embedded-configuration</artifactId>
-      <version>${eclipsestore.version}</version>
     </dependency>
     <dependency>
       <groupId>io.micronaut.serde</groupId>

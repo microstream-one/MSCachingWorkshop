@@ -13,6 +13,8 @@ import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import one.microstream.dao.microstream.DAOBook;
 import one.microstream.dao.microstream.postgres.PostDAOBook;
+import one.microstream.enterprise.cluster.nodelibrary.common.ClusterStorageManager;
+import one.microstream.enterprise.cluster.nodelibrary.common.impl._default.NodeDefaultClusterStorageManager;
 import org.postgresql.PGConnection;
 import org.postgresql.PGNotification;
 import org.slf4j.Logger;
@@ -45,6 +47,8 @@ public class InitPostgresBooksNotifier implements ApplicationEventListener<Objec
     @Inject
     @Named("pg-listener")
     ExecutorService executorService;
+    @Inject
+    ClusterStorageManager storageManager;
 
     private Connection connection;
     private volatile boolean running = true;
@@ -108,7 +112,12 @@ public class InitPostgresBooksNotifier implements ApplicationEventListener<Objec
         final String channel = notification.getName();
         final String payload = notification.getParameter();
 
-        daoBook.insert(notification);
+        LOG.info("Received notification on channel {}: {}", channel, payload);
+
+        if ((this.storageManager instanceof NodeDefaultClusterStorageManager) && this.storageManager.isDistributor())
+        {
+            daoBook.insert(notification);
+        }
     }
     
     @PreDestroy
