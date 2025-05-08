@@ -30,50 +30,50 @@ public class PostBook
     }
 
     public Integer getId() {
-        return this.id;
+        return id;
     }
 
-    public void setId(final Integer id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
     public String getTitle() {
-        return this.title;
+        return title;
     }
 
-    public void setTitle(final String title) {
+    public void setTitle(String title) {
         this.title = title;
     }
 
     public String getAuthor() {
-        return this.author;
+        return author;
     }
 
-    public void setAuthor(final String author) {
+    public void setAuthor(String author) {
         this.author = author;
     }
 
     public String getGenre() {
-        return this.genre;
+        return genre;
     }
 
-    public void setGenre(final String genre) {
+    public void setGenre(String genre) {
         this.genre = genre;
     }
 
     public String getIsbn() {
-        return this.isbn;
+        return isbn;
     }
 
-    public void setIsbn(final String isbn) {
+    public void setIsbn(String isbn) {
         this.isbn = isbn;
     }
 
     public int getPages() {
-        return this.pages;
+        return pages;
     }
 
-    public void setPages(final int pages) {
+    public void setPages(int pages) {
         this.pages = pages;
     }
 }

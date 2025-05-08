@@ -7,6 +7,9 @@ import one.microstream.domain.postgres.PostBook;
 import one.microstream.dto.DtoBook;
 import one.microstream.repositories.RepoBook;
 
+import javax.swing.text.html.StyleSheet;
+import java.util.List;
+
 @Singleton
 public class PostDAOBook
 {
@@ -19,6 +22,11 @@ public class PostDAOBook
     {
         final PostBook saved = this.repoBook.save(this.mapperBook.toNewPostBook(book));
         return saved;
+    }
+
+    public List<PostBook> findAll()
+    {
+        return this.repoBook.findAll();
     }
 
 }
