@@ -1,7 +1,6 @@
 package one.microstream.core.mapper;
 
 import jakarta.inject.Singleton;
-import one.microstream.domain.microstream.Book;
 import one.microstream.domain.postgres.PostBook;
 import one.microstream.dto.DtoBook;
 
