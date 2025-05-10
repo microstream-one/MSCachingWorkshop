@@ -112,8 +112,11 @@ public class InitPostgresBooksNotifier implements ApplicationEventListener<Objec
 
         LOG.info("Received notification on channel {}: {}", channel, payload);
 
+        LOG.info("Right storage manager: " + (this.storageManager instanceof NodeDefaultClusterStorageManager));
+        LOG.info("Instance is distributor: : " + (this.storageManager.isDistributor()));
         if ((this.storageManager instanceof NodeDefaultClusterStorageManager) && this.storageManager.isDistributor())
         {
+            LOG.info("Instance is distributor");
             daoBook.insert(notification);
         }
     }

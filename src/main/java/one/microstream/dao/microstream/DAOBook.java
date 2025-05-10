@@ -4,6 +4,7 @@ import io.micronaut.eclipsestore.RootProvider;
 import io.micronaut.serde.ObjectMapper;
 import jakarta.inject.Inject;
 import one.microstream.core.init.DatabaseEvent;
+import one.microstream.core.init.InitPostgresBooksNotifier;
 import one.microstream.dao.microstream.postgres.PostDAOBook;
 import one.microstream.domain.microstream.Book;
 import one.microstream.domain.microstream.Company;
@@ -11,6 +12,8 @@ import one.microstream.domain.postgres.PostBook;
 import org.eclipse.store.storage.types.Database;
 import org.eclipse.store.storage.types.StorageManager;
 import org.postgresql.PGNotification;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,6 +22,8 @@ import java.util.stream.Collectors;
 
 public class DAOBook
 {
+	private static final Logger LOG = LoggerFactory.getLogger(DAOBook.class);
+
 	@Inject
 	RootProvider<Company> company;
 	@Inject
@@ -46,6 +51,8 @@ public class DAOBook
 
 			company.root().getBooks().add(book);
 			storageManager.store(company.root().getBooks());
+
+			LOG.info("MicroStream successfully stored");
 		}
 		catch (IOException e)
 		{
