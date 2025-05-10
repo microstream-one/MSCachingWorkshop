@@ -41,4 +41,11 @@ public class BookController
 
         return HttpResponse.ok(inserted);
     }
+
+    @Post("/dbsync")
+    HttpResponse<?> performDBSync()
+    {
+        daoBook.performStartupSync();
+        return HttpResponse.ok("Sync successfully performed");
+    }
 }

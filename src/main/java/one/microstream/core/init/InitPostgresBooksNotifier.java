@@ -12,7 +12,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import one.microstream.dao.microstream.DAOBook;
-import one.microstream.dao.microstream.postgres.PostDAOBook;
 import one.microstream.enterprise.cluster.nodelibrary.common.ClusterStorageManager;
 import one.microstream.enterprise.cluster.nodelibrary.common.impl._default.NodeDefaultClusterStorageManager;
 import org.postgresql.PGConnection;
@@ -20,7 +19,6 @@ import org.postgresql.PGNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
