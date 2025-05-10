@@ -9,6 +9,7 @@ import one.microstream.dao.microstream.postgres.PostDAOBook;
 import one.microstream.domain.microstream.Book;
 import one.microstream.domain.microstream.Company;
 import one.microstream.domain.postgres.PostBook;
+import one.microstream.enterprise.cluster.nodelibrary.common.ClusterStorageManager;
 import org.eclipse.store.storage.types.Database;
 import org.eclipse.store.storage.types.StorageManager;
 import org.postgresql.PGNotification;
@@ -27,7 +28,7 @@ public class DAOBook
 	@Inject
 	RootProvider<Company> company;
 	@Inject
-	StorageManager storageManager;
+	ClusterStorageManager storageManager;
 	@Inject
 	PostDAOBook postDAOBook;
 	@Inject
@@ -37,11 +38,11 @@ public class DAOBook
 	public void insert(final PGNotification notification)
 	{
 		String parameter = notification.getParameter();
-
+		LOG.info("MicroStream tries to store");
         try
 		{
 			DatabaseEvent created = objectMapper.readValue(parameter, DatabaseEvent.class);
-
+			LOG.info("Check if objectmanager is ok and it is");
 			Book book = new Book();
 			book.setPostId(created.getData().getId());
 			book.setTitle(created.getData().getTitle());
