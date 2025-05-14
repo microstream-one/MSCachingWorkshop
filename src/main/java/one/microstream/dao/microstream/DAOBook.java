@@ -28,12 +28,12 @@ public class DAOBook
 	ClusterStorageManager storageManager;
 	@Inject
 	PostDAOBook postDAOBook;
-	@Inject
-	ObjectMapper objectMapper;
 
 
 	public void insert(final PGNotification notification)
 	{
+		ObjectMapper objectMapper = new ObjectMapper();
+
 		String parameter = notification.getParameter();
 		LOG.info("MicroStream tries to store");
         try
