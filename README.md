@@ -5,6 +5,7 @@
 - [Configuration Reference](https://docs.micronaut.io/4.8.2/guide/configurationreference.html)
 - [Micronaut Guides](https://guides.micronaut.io/index.html)
 ---
+## Function that needs to be added to PostgreSQL database for notification functionality
 ```sql
 create function notify_data_change() returns trigger
     language plpgsql
