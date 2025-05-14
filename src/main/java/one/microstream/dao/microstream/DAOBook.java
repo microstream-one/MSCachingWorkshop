@@ -1,14 +1,13 @@
 package one.microstream.dao.microstream;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micronaut.eclipsestore.RootProvider;
-import io.micronaut.serde.ObjectMapper;
 import jakarta.inject.Inject;
 import one.microstream.core.init.DatabaseEvent;
 import one.microstream.dao.microstream.postgres.PostDAOBook;
 import one.microstream.domain.microstream.Book;
 import one.microstream.domain.microstream.Company;
 import one.microstream.domain.postgres.PostBook;
-import org.eclipse.store.storage.types.Database;
 import org.eclipse.store.storage.types.StorageManager;
 import org.postgresql.PGNotification;
 
@@ -25,12 +24,11 @@ public class DAOBook
 	StorageManager storageManager;
 	@Inject
 	PostDAOBook postDAOBook;
-	@Inject
-	ObjectMapper objectMapper;
 
 
 	public void insert(final PGNotification notification)
 	{
+		ObjectMapper objectMapper = new ObjectMapper();
 		String parameter = notification.getParameter();
 
         try
