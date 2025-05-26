@@ -9,7 +9,6 @@ import one.microstream.domain.microstream.Book;
 import one.microstream.domain.microstream.Company;
 import one.microstream.domain.postgres.PostBook;
 import one.microstream.enterprise.cluster.nodelibrary.common.ClusterStorageManager;
-import org.eclipse.store.storage.types.StorageManager;
 import org.postgresql.PGNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,12 +32,14 @@ public class DAOBook
 
 	public void insert(final PGNotification notification)
 	{
+		ObjectMapper objectMapper = new ObjectMapper();
+
 		String parameter = notification.getParameter();
 		LOG.info("MicroStream tries to store");
         try
 		{
-			ObjectMapper objectMapper = new ObjectMapper();
 			DatabaseEvent created = objectMapper.readValue(parameter, DatabaseEvent.class);
+			LOG.info("Check if objectmanager is ok and it is");
 			Book book = new Book();
 			book.setPostId(created.getData().getId());
 			book.setTitle(created.getData().getTitle());
@@ -53,7 +54,6 @@ public class DAOBook
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
