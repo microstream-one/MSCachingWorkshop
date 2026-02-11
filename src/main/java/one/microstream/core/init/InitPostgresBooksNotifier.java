@@ -13,6 +13,9 @@ import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import one.microstream.dao.microstream.DAOBook;
 import one.microstream.dao.microstream.postgres.PostDAOBook;
+import org.eclipse.datagrid.cluster.nodelibrary.types.ClusterFoundation;
+import org.eclipse.datagrid.cluster.nodelibrary.types.StorageNodeManager;
+import org.eclipse.store.storage.types.Storage;
 import org.postgresql.PGConnection;
 import org.postgresql.PGNotification;
 import org.slf4j.Logger;
@@ -30,6 +33,18 @@ import java.util.concurrent.ExecutorService;
 public class InitPostgresBooksNotifier implements ApplicationEventListener<Object> {
 
     private static final Logger LOG = LoggerFactory.getLogger(InitPostgresBooksNotifier.class);
+
+    private final boolean isProdMode;
+    private final StorageNodeManager clusterNodeManager;
+
+    public InitPostgresBooksNotifier(final ClusterFoundation<?> clusterFoundation)
+    {
+        final var props = clusterFoundation.getNodelibraryPropertiesProvider();
+        this.isProdMode = props.isProdMode();
+        this.clusterNodeManager = this.isProdMode && !props.isBackupNode()
+                ? clusterFoundation.getStorageNodeManager()
+                : null;
+    }
 
     @Value("${datasources.default.url}")
     private String jdbcUrl;
@@ -55,10 +70,34 @@ public class InitPostgresBooksNotifier implements ApplicationEventListener<Objec
     {
     	 if (event instanceof ApplicationStartupEvent)
          {
-             try {
-                 this.initializeListener();
-             } catch (final SQLException e) {
-                 throw new RuntimeException("Error starting PostgreSQL listener", e);
+             if (this.isProdMode)
+             {
+                 // we are inside the cluster
+                 if (this.clusterNodeManager == null)
+                 {
+                     // we are a dev node or the backup node
+                     return;
+                 }
+
+                 if (!this.clusterNodeManager.isDistributor())
+                 {
+                     // we are a reader node
+                     return;
+                 }
+
+                 try {
+                     this.initializeListener();
+                 } catch (final SQLException e) {
+                     throw new RuntimeException("Error starting PostgreSQL listener", e);
+                 }
+             }
+             else
+             {
+                 try {
+                     this.initializeListener();
+                 } catch (final SQLException e) {
+                     throw new RuntimeException("Error starting PostgreSQL listener", e);
+                 }
              }
          }
          else if (event instanceof ServerShutdownEvent)
