@@ -1,49 +1,54 @@
 package one.microstream.core.init;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micronaut.context.annotation.Context;
 import io.micronaut.context.annotation.Value;
-import io.micronaut.context.event.ApplicationEventListener;
 import io.micronaut.data.connection.annotation.Connectable;
-import io.micronaut.runtime.event.ApplicationStartupEvent;
-import io.micronaut.runtime.server.event.ServerShutdownEvent;
+import io.vertx.core.Vertx;
+import io.vertx.pgclient.PgConnectOptions;
+import io.vertx.pgclient.pubsub.PgSubscriber;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Singleton;
 import one.microstream.dao.microstream.DAOBook;
-import one.microstream.dao.microstream.postgres.PostDAOBook;
+import one.microstream.domain.microstream.Book;
 import org.eclipse.datagrid.cluster.nodelibrary.types.ClusterFoundation;
 import org.eclipse.datagrid.cluster.nodelibrary.types.StorageNodeManager;
-import org.eclipse.store.storage.types.Storage;
-import org.postgresql.PGConnection;
-import org.postgresql.PGNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Arrays;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
-@Singleton
-public class InitPostgresBooksNotifier implements ApplicationEventListener<Object> {
+@Context
+public class InitPostgresBooksNotifier {
 
     private static final Logger LOG = LoggerFactory.getLogger(InitPostgresBooksNotifier.class);
 
     private final boolean isProdMode;
+    @Inject
     private final StorageNodeManager clusterNodeManager;
+    @Inject
+    private final Vertx vertx;
+    @Inject
+    private final PgConnectOptions connectOptions;
+    @Inject
+    private final ObjectMapper objectMapper;
 
-    public InitPostgresBooksNotifier(final ClusterFoundation<?> clusterFoundation)
+    public InitPostgresBooksNotifier(final ClusterFoundation<?> clusterFoundation, Vertx vertx,
+                                     PgConnectOptions connectOptions, ObjectMapper objectMapper)
     {
         final var props = clusterFoundation.getNodelibraryPropertiesProvider();
         this.isProdMode = props.isProdMode();
         this.clusterNodeManager = this.isProdMode && !props.isBackupNode()
                 ? clusterFoundation.getStorageNodeManager()
                 : null;
+        this.vertx = vertx;
+        this.connectOptions = connectOptions;
+        this.objectMapper = objectMapper;
     }
 
     @Value("${datasources.default.url}")
@@ -64,90 +69,45 @@ public class InitPostgresBooksNotifier implements ApplicationEventListener<Objec
     private Connection connection;
     private volatile boolean running = true;
 
-    @Override
-    @Connectable
-    public void onApplicationEvent(final Object event)
-    {
-    	 if (event instanceof ApplicationStartupEvent)
-         {
-             if (this.isProdMode)
-             {
-                 // we are inside the cluster
-                 if (this.clusterNodeManager == null)
-                 {
-                     // we are a dev node or the backup node
-                     return;
-                 }
+    @PostConstruct
+    public void init() {
+        // Der PgSubscriber ist in 5.0.7 das Mittel der Wahl für LISTEN/NOTIFY
+        PgSubscriber subscriber = PgSubscriber.subscriber(vertx, connectOptions);
 
-                 if (!this.clusterNodeManager.isDistributor())
-                 {
-                     // we are a reader node
-                     return;
-                 }
+        // Verbindung aufbauen
+        subscriber.connect().onComplete(ar -> {
+            if (ar.succeeded()) {
+                LOG.info("Erfolgreich mit PostgreSQL für NOTIFY verbunden.");
 
-                 try {
-                     this.initializeListener();
-                 } catch (final SQLException e) {
-                     throw new RuntimeException("Error starting PostgreSQL listener", e);
-                 }
-             }
-             else
-             {
-                 try {
-                     this.initializeListener();
-                 } catch (final SQLException e) {
-                     throw new RuntimeException("Error starting PostgreSQL listener", e);
-                 }
-             }
-         }
-         else if (event instanceof ServerShutdownEvent)
-         {
-             this.shutdown();
-         }
+                // Auf den Kanal 'data_changed' horchen
+                subscriber.channel("data_changed").handler(payload -> {
+                    LOG.info("Event empfangen: {}", payload);
+                    processPayload(payload);
+                });
 
-    }
-
-    private void initializeListener() throws SQLException
-    {
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(jdbcUrl);
-        config.setUsername(username);
-        config.setPassword(password);
-        config.setMaximumPoolSize(1);
-        config.setPoolName("ListenerPool");
-
-        HikariDataSource rawDataSource = new HikariDataSource(config);
-
-        this.connection = rawDataSource.getConnection();
-        final PGConnection pgConnection = this.connection.unwrap(PGConnection.class);
-
-        try (Statement stmt = this.connection.createStatement()) {
-            stmt.execute("LISTEN data_changed");
-        }
-        LOG.info("LISTEN to channel 'data_changed'");
-
-        this.executorService.submit(() -> this.pollNotifications(pgConnection));
-    }
-
-    private void pollNotifications(final PGConnection pgConnection) {
-        while (this.running) {
-            try {
-                Optional.ofNullable(pgConnection.getNotifications(5000))
-                        .stream()
-                        .flatMap(Arrays::stream)
-                        .forEach(this::handleNotification);
-            } catch (final SQLException e) {
-                LOG.error("Error retrieving notifications", e);
+            } else {
+                LOG.error("Verbindung für LISTEN fehlgeschlagen: ", ar.cause());
             }
-        }
+        });
+
+        // Optional: Reconnect-Strategie
+        subscriber.reconnectPolicy(retries -> {
+            LOG.warn("Verbindung verloren. Versuch {} für Reconnect...", retries);
+            return 1000L * Math.min(retries, 30); // Max 30 Sekunden Pause
+        });
     }
 
-    private void handleNotification(final PGNotification notification)
-    {
-        final String channel = notification.getName();
-        final String payload = notification.getParameter();
+    private void processPayload(String payload) {
+        try {
+            // Wir nutzen TypeReference, um das generische T als 'Book' zu definieren
+            Book book = objectMapper.readValue(payload, Book.class);
 
-        daoBook.insert(notification);
+            LOG.info("📖 Book Event: {} - ID: {}, Title: {}", book.getIsbn(), book.getTitle());
+
+
+        } catch (Exception e) {
+            LOG.error("Fehler beim Mapping des Payloads auf Klasse Book", e);
+        }
     }
     
     @PreDestroy
