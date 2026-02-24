@@ -1,7 +1,12 @@
 package one.microstream.domain.postgres;
 
+import io.micronaut.data.annotation.AutoPopulated;
+import io.micronaut.data.annotation.MappedProperty;
 import io.micronaut.serde.annotation.Serdeable;
+import io.micronaut.transaction.annotation.ReadOnly;
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 
 @Serdeable
 @Entity
@@ -17,6 +22,12 @@ public class PostBook
     private String genre;
     private String isbn;
     private int pages;
+    @AutoPopulated
+    @Column(name = "created",  insertable = false, updatable = false)
+    private LocalDateTime created;
+    @AutoPopulated
+    @Column(name = "updated",  insertable = false, updatable = false)
+    private LocalDateTime updated;
 
     public PostBook() {
     }

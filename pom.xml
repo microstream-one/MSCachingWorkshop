@@ -47,6 +47,11 @@
           <artifactId>storage-embedded-configuration</artifactId>
           <version>${eclipsestore.version}</version>
       </dependency>
+      <dependency>
+          <groupId>org.eclipse.store</groupId>
+          <artifactId>gigamap</artifactId>
+          <version>${eclipsestore.version}</version>
+      </dependency>
     <dependency>
       <groupId>io.micronaut</groupId>
       <artifactId>micronaut-http-server-netty</artifactId>

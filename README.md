@@ -27,6 +27,27 @@ $$;
 
 alter function notify_data_change() owner to workshopuser;
 ```
+
+```sql
+CREATE OR REPLACE FUNCTION set_updated_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+```
+
+```sql
+CREATE OR REPLACE FUNCTION set_created_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.created = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+```
+
 ## Trigger that needs to be added to the table
 
 ```sql
@@ -37,6 +58,21 @@ create trigger data_change_trigger
     for each row
 execute procedure notify_data_change();
 ```
+
+```sql
+CREATE TRIGGER on_update_books
+BEFORE UPDATE ON books
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_timestamp();
+```
+
+```sql
+CREATE TRIGGER on_insert_books
+BEFORE INSERT ON books
+FOR EACH ROW
+EXECUTE FUNCTION set_created_timestamp();
+```
+
 - [Micronaut Maven Plugin documentation](https://micronaut-projects.github.io/micronaut-maven-plugin/latest/)
 ## Feature eclipsestore documentation
 
