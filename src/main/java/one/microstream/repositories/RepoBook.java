@@ -11,6 +11,4 @@ import java.util.List;
 public interface RepoBook extends CrudRepository<PostBook, Integer>
 {
     List<PostBook> findByTitle(String title);
-    List<PostBook> findByCreatedAfter(LocalDateTime from);
-    List<PostBook> findByUpdatedAfter(LocalDateTime from);
 }
