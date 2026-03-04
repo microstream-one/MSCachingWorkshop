@@ -22,22 +22,29 @@ public class PostBook
     private String genre;
     private String isbn;
     private int pages;
-    @AutoPopulated
-    @Column(name = "created",  insertable = false, updatable = false)
-    private LocalDateTime created;
-    @AutoPopulated
-    @Column(name = "updated",  insertable = false, updatable = false)
-    private LocalDateTime updated;
+    private String publisher;
+    private int year;
+    private String description;
+    private String language;
+    private double price;
 
     public PostBook() {
     }
 
-    public PostBook(final String title, final String author, final String genre, final String isbn, final int pages) {
-    	this.title = title;
-    	this.author = author;
-    	this.genre = genre;
-    	this.isbn = isbn;
-    	this.pages = pages;
+    public PostBook(String title, String author, String genre, String isbn, int pages,
+                    String publisher, int year, String description, String language,
+                    double price) {
+
+        this.title = title;
+        this.author = author;
+        this.genre = genre;
+        this.isbn = isbn;
+        this.pages = pages;
+        this.publisher = publisher;
+        this.year = year;
+        this.description = description;
+        this.language = language;
+        this.price = price;
     }
 
     public Integer getId() {
@@ -86,5 +93,45 @@ public class PostBook
 
     public void setPages(int pages) {
         this.pages = pages;
+    }
+
+    public String getPublisher() {
+        return publisher;
+    }
+
+    public void setPublisher(String publisher) {
+        this.publisher = publisher;
+    }
+
+    public int getYear() {
+        return year;
+    }
+
+    public void setYear(int year) {
+        this.year = year;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
     }
 }

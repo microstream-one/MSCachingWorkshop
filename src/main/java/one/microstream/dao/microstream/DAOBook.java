@@ -2,6 +2,7 @@ package one.microstream.dao.microstream;
 
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.eclipsestore.RootProvider;
+import io.micronaut.http.HttpResponse;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
 import one.microstream.dao.microstream.postgres.PostDAOBook;
@@ -76,8 +77,4 @@ public class DAOBook
 		}
 	}
 
-	public void performStartupSync()
-	{
-        //TODO needs to be implemented
-	}
 }

@@ -2,16 +2,12 @@ package one.microstream.controller;
 
 
 import io.micronaut.core.annotation.NonNull;
-import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.*;
-import io.micronaut.scheduling.TaskExecutors;
-import io.micronaut.scheduling.annotation.ExecuteOn;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
 import one.microstream.core.mapper.MapperBook;
+import one.microstream.core.ollama.EmbeddingService;
 import one.microstream.dao.microstream.DAOBook;
-import one.microstream.dao.microstream.postgres.PostDAOBook;
-import one.microstream.domain.postgres.PostBook;
 import one.microstream.dto.DtoBook;
 
 import java.util.List;
@@ -24,6 +20,8 @@ public class BookCacheController
     DAOBook daoBook;
     @Inject
     MapperBook mapperBook;
+    @Inject
+    EmbeddingService embeddingService;
 
     @Get("/page/{limit}")
     List<DtoBook> pageAllBooks(@NonNull @NotBlank @PathVariable int limit)
@@ -31,5 +29,9 @@ public class BookCacheController
         return daoBook.pageBooks(limit).stream().map(b -> mapperBook.toDto(b)).collect(Collectors.toUnmodifiableList());
     }
 
-
+    @Get("/createVector/{text}")
+    float[] pageAllBooks(@NonNull @NotBlank @PathVariable String text)
+    {
+        return embeddingService.vectorize(text);
+    }
 }

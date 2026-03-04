@@ -24,6 +24,12 @@ public class PostDAOBook
         return saved;
     }
 
+    public PostBook insert(final PostBook book)
+    {
+        final PostBook saved = this.repoBook.save(book);
+        return saved;
+    }
+
     public List<PostBook> findAll()
     {
         return this.repoBook.findAll();
