@@ -48,12 +48,7 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- Nodelibrary -->
-        <dependency>
-            <groupId>org.eclipse.datagrid</groupId>
-            <artifactId>cluster-nodelibrary-micronaut</artifactId>
-            <version>1.17.2</version>
-        </dependency>
+
         <dependency>
             <groupId>org.eclipse.store</groupId>
             <artifactId>storage-embedded-configuration</artifactId>
@@ -68,6 +63,18 @@
             <groupId>org.eclipse.store</groupId>
             <artifactId>gigamap</artifactId>
             <version>${eclipsestore.version}</version>
+        </dependency>
+        <!-- Nodelibrary -->
+        <dependency>
+            <groupId>org.eclipse.datagrid</groupId>
+            <artifactId>cluster-nodelibrary-micronaut</artifactId>
+            <version>1.17.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.serializer</groupId>
+                    <artifactId>persistence</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.debezium</groupId>

@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import one.microstream.dao.microstream.postgres.PostDAOBook;
 import one.microstream.domain.microstream.Book;
 import one.microstream.domain.microstream.Company;
+import org.eclipse.store.gigamap.types.GigaIterator;
 import org.eclipse.store.storage.types.StorageManager;
 
 import java.util.List;
@@ -30,6 +31,13 @@ public class DAOBook
         {
             return stream.limit(limit).collect(Collectors.toList());
         }
+    }
+
+    public List<Book> allBooks()
+    {
+        GigaIterator<Book> iterator = company.root().getGigaBooks().iterator();
+        List<Book> collect = Stream.generate(iterator::next).collect(Collectors.toUnmodifiableList());
+        return collect;
     }
 
 	public void insert(final Book book)

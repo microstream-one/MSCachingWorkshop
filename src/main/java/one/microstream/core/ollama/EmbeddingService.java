@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Singleton
-public class EmbeddingService extends Vectorizer<String>
+public class EmbeddingService extends Vectorizer<Book>
 {
     private static final Logger LOG = LoggerFactory.getLogger(EmbeddingService.class);
     private final MapperBook mapperBook;
@@ -66,6 +66,37 @@ public class EmbeddingService extends Vectorizer<String>
     }
 
     @Override
+    public float[] vectorize(Book b) {
+        if (model == null)
+        {
+            this.model = OllamaEmbeddingModel.builder()
+                    .baseUrl(ollamaURL)
+                    .modelName(modelName) // Ein sehr gutes Modell für Embeddings
+                    .timeout(Duration.ofSeconds(120)) // Mehr Puffer für Docker-Starts
+                    .logRequests(true)               // Hilfreich für das Debugging
+                    .logResponses(true)
+                    .build();
+        }
+
+        // 2. Embedding generieren
+        System.out.println("Generiere Embedding...");
+        Response<Embedding> response = model.embed(mapperBook.toEmbeddingText(b));
+
+        // 3. Ergebnis ausgeben
+        float[] vector = response.content().vector();
+        System.out.println("Dimension des Vektors: " + vector.length);
+        System.out.println("Erste 5 Werte: " +
+                vector[0] + ", " + vector[1] + ", " + vector[2] + ", " + vector[3] + ", " + vector[4]);
+
+        return  vector;
+    }
+
+    @Override
+    public boolean isEmbedded()
+    {
+        return true; // Vector is stored in entity (no duplicate storage)
+    }
+
     public float[] vectorize(String text) {
         if (model == null)
         {
