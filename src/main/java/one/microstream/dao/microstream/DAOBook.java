@@ -2,12 +2,16 @@ package one.microstream.dao.microstream;
 
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.eclipsestore.RootProvider;
-import io.micronaut.http.HttpResponse;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
 import one.microstream.dao.microstream.postgres.PostDAOBook;
+import one.microstream.domain.indices.BookIndices;
 import one.microstream.domain.microstream.Book;
 import one.microstream.domain.microstream.Company;
+import org.apache.commons.math3.stat.descriptive.summary.Product;
+import org.eclipse.store.gigamap.jvector.VectorIndex;
+import org.eclipse.store.gigamap.jvector.VectorIndices;
+import org.eclipse.store.gigamap.jvector.VectorSearchResult;
 import org.eclipse.store.gigamap.types.GigaIterator;
 import org.eclipse.store.storage.types.StorageManager;
 
@@ -40,12 +44,30 @@ public class DAOBook
         return collect;
     }
 
+    public List<Book> searchBooks(float[] filter)
+    {
+        VectorIndices<Book> keyValues = company.root().gigaBooks.index().get(VectorIndices.Category());
+        VectorIndex<Book> index = keyValues.iterator().next().value();
+
+        VectorSearchResult<Book> result = index.search(filter, 100);
+
+        result.forEach(entry ->
+        {
+            final Book similar = entry.entity();
+            System.out.printf("%s, score=%s%n", similar.getTitle(), entry.score());
+        });
+
+        return result.stream().filter(e -> e.score() >= 0.80f)
+                .map(vsr -> vsr.entity()).collect(Collectors.toUnmodifiableList());
+    }
+
 	public void insert(final Book book)
 	{
 		this.company.root().getGigaBooks().add(book);
-		this.storageManager.store(book);
+        this.company.root().getGigaBooks().store();
 	}
 
+    //TODO Improve implementation
 	public void update(final Book book)
 	{
 		try (Stream<Book> stream = this.company.root().getGigaBooks().query().stream())
@@ -62,7 +84,12 @@ public class DAOBook
 				found.setGenre(book.getGenre());
 				found.setIsbn(book.getIsbn());
 				found.setPages(book.getPages());
-				this.storageManager.store(found);
+                found.setPrice(book.getPrice());
+                found.setDescription(book.getDescription());
+                found.setDescription(book.getLanguage());
+                found.setYear(book.getYear());
+                found.setPublisher(book.getPublisher());
+                this.company.root().getGigaBooks().store();
 			}
 			else
 			{

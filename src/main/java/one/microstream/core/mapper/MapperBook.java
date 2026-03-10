@@ -29,9 +29,4 @@ public class MapperBook
         return String.format("Titel: %s; Autor: %s; Inhalt: %s",
                 b.getTitle(), b.getAuthor(), b.getDescription());
     }
-
-    public String toEmbeddingText(final Book b) {
-        return String.format("Titel: %s; Autor: %s; Inhalt: %s",
-                b.getTitle(), b.getAuthor(), b.getDescription());
-    }
 }

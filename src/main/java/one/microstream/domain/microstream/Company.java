@@ -17,22 +17,13 @@ import java.util.List;
 @Singleton
 public class Company
 {
-    EmbeddingService embeddingService;
-
     public GigaMap<Book> gigaBooks	= GigaMap.New();
-    VectorIndices<Book> vectorIndices = gigaBooks.index().register(VectorIndices.Category());
-    // Configure the vector index
-    VectorIndexConfiguration config = VectorIndexConfiguration.builder()
-            .dimension(768)
-            .similarityFunction(VectorSimilarityFunction.COSINE)
-            .build();
 
-    VectorIndex<Book> index = vectorIndices.add("embeddings", config, embeddingService);
-
-    public Company(EmbeddingService embeddingService)
+    public Company()
     {
         super();
-        this.embeddingService = embeddingService;
+
+        BookIndices.registerVectorIndex(gigaBooks);
     }
 
     public GigaMap<Book> getGigaBooks() {

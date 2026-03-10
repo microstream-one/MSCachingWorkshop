@@ -14,7 +14,7 @@ public class DataFakerService
     public List<PostBook> createBooks(Integer amount)
     {
         // Faker mit deutscher Lokalisierung für realistischere Daten
-        Faker faker = new Faker(new Locale("de"));
+        Faker faker = new Faker(new Locale("en"));
 
         List<PostBook> books = new ArrayList<>(amount);
 
@@ -29,7 +29,7 @@ public class DataFakerService
                     faker.number().numberBetween(100, 1200),   // 10. Seitenzahl
                     faker.book().publisher(),        // 5. Verlag
                     faker.number().numberBetween(1950, 2024), // 6. Erscheinungsjahr
-                    faker.lorem().paragraph(3),      // 7. Beschreibung (Wichtig für Embeddings!)
+                    faker.matz().quote(),      // 7. Beschreibung (Wichtig für Embeddings!)
                     faker.options().option("DE", "EN", "FR"), // 8. Sprache
                     faker.number().randomDouble(2, 10, 50)   // 9. Preis
             ));

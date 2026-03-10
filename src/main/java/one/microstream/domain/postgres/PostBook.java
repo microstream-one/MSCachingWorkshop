@@ -17,6 +17,7 @@ public class PostBook
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer			id;
+    @Column(length = 4000)
     private String title;
     private String author;
     private String genre;
@@ -24,6 +25,7 @@ public class PostBook
     private int pages;
     private String publisher;
     private int year;
+    @Column(length = 4000)
     private String description;
     private String language;
     private double price;

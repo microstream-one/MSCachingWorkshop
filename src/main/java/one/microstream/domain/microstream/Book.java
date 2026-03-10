@@ -18,7 +18,6 @@ public class Book
     private String description;
     private String language;
     private double price;
-    private float[] embeddings;
 
     public Book() {
     }
@@ -126,13 +125,5 @@ public class Book
 
     public void setPrice(double price) {
         this.price = price;
-    }
-
-    public float[] getEmbeddings() {
-        return embeddings;
-    }
-
-    public void setEmbeddings(float[] embeddings) {
-        this.embeddings = embeddings;
     }
 }
