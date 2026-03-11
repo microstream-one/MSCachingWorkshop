@@ -23,14 +23,12 @@ public class PostDAOBook
 
     public PostBook insert(final DtoBook book)
     {
-        final PostBook saved = this.repoBook.save(this.mapperBook.toNewPostBook(book));
-        return saved;
+        return this.repoBook.save(this.mapperBook.toNewPostBook(book));
     }
 
     public PostBook insert(final PostBook book)
     {
-        final PostBook saved = this.repoBook.save(book);
-        return saved;
+        return this.repoBook.save(book);
     }
 
     public PostBook update(final DtoBook dto) throws RuntimeException
@@ -39,8 +37,7 @@ public class PostDAOBook
 
         if(byId.isPresent())
         {
-            final PostBook updated = this.repoBook.update(this.mapperBook.updatePostBook(byId.get(), dto));
-            return updated;
+            return this.repoBook.update(this.mapperBook.updatePostBook(byId.get(), dto));
         }
         else {
             throw new RuntimeException("Book not found");
@@ -48,16 +45,7 @@ public class PostDAOBook
     }
 
     public void delete(@NonNull @NotBlank Integer id) {
-        Optional<PostBook> byId = repoBook.findById(id);
-
-        if(byId.isPresent())
-        {
-            final PostBook updated = this.repoBook.deleteById();
-            return updated;
-        }
-        else {
-            throw new RuntimeException("Book not found");
-        }
+        this.repoBook.deleteById(id);
     }
 
     public List<PostBook> findAll()
