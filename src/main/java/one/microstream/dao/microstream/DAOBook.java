@@ -19,8 +19,6 @@ public class DAOBook
 {
 	@Inject
 	RootProvider<Company> company;
-    @Inject
-    StorageManager storageManager;
 
     public List<Book> pageBooks(@NonNull @NotBlank int limit)
     {
