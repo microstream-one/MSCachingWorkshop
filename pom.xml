@@ -19,7 +19,7 @@
         <micronaut.version>4.8.2</micronaut.version>
         <micronaut.runtime>netty</micronaut.runtime>
         <micronaut.aot.enabled>false</micronaut.aot.enabled>
-        <eclipsestore.version>4.0.0-beta3</eclipsestore.version>
+        <eclipsestore.version>4.0.0</eclipsestore.version>
         <micronaut.aot.packageName>one.microstream.aot.generated</micronaut.aot.packageName>
         <exec.mainClass>one.microstream.Application</exec.mainClass>
     </properties>
@@ -53,6 +53,12 @@
             <groupId>org.eclipse.datagrid</groupId>
             <artifactId>cluster-nodelibrary-micronaut</artifactId>
             <version>1.17.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.serializer</groupId>
+                    <artifactId>persistence</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.eclipse.store</groupId>
@@ -195,11 +201,6 @@
         <dependency>
             <groupId>io.micronaut.cache</groupId>
             <artifactId>micronaut-cache-core</artifactId>
-        </dependency>
-        <!-- Source: https://mvnrepository.com/artifact/dev.langchain4j/langchain4j-ollama -->
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-ollama</artifactId>
         </dependency>
 
         <!-- Source: https://mvnrepository.com/artifact/net.datafaker/datafaker -->

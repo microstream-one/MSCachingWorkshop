@@ -5,7 +5,7 @@ import io.micronaut.eclipsestore.RootProvider;
 import io.micronaut.http.HttpResponse;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
-import one.microstream.dao.microstream.postgres.PostDAOBook;
+import one.microstream.domain.indices.BookIndices;
 import one.microstream.domain.microstream.Book;
 import one.microstream.domain.microstream.Company;
 import org.eclipse.store.storage.types.StorageManager;
@@ -19,10 +19,8 @@ public class DAOBook
 {
 	@Inject
 	RootProvider<Company> company;
-	@Inject
-	StorageManager storageManager;
-	@Inject
-	PostDAOBook postDAOBook;
+    @Inject
+    StorageManager storageManager;
 
     public List<Book> pageBooks(@NonNull @NotBlank int limit)
     {
@@ -32,49 +30,53 @@ public class DAOBook
         }
     }
 
+    public Optional<Book> byPostId(Integer postId)
+    {
+        return company.root().getGigaBooks().query(BookIndices.postgresIdIndex.is(postId)).findFirst();
+    }
+
 	public void insert(final Book book)
 	{
-		this.company.root().getGigaBooks().add(book);
-		this.storageManager.store(book);
+        this.company.root().getGigaBooks().add(book);
+        this.company.root().getGigaBooks().store();
 	}
 
 	public void update(final Book book)
 	{
-		try (Stream<Book> stream = this.company.root().getGigaBooks().query().stream())
-		{
-			final Optional<Book> existing = stream
-					.filter(b -> b.getPostId() != null && b.getPostId().equals(book.getPostId()))
-					.findFirst();
+        Optional<Book> optBook = byPostId(book.getPostId());
 
-			if (existing.isPresent())
-			{
-				final Book found = existing.get();
-				found.setTitle(book.getTitle());
-				found.setAuthor(book.getAuthor());
-				found.setGenre(book.getGenre());
-				found.setIsbn(book.getIsbn());
-				found.setPages(book.getPages());
-				this.storageManager.store(found);
-			}
-			else
-			{
-				this.insert(book);
-			}
-		}
+        if(optBook.isPresent())
+        {
+            Book bookToChange = optBook.get();
+
+            this.company.root().getGigaBooks().update(bookToChange, p ->
+            {
+                p.setTitle(book.getTitle());
+                p.setAuthor(book.getAuthor());
+                p.setGenre(book.getGenre());
+                p.setIsbn(book.getIsbn());
+                p.setPages(book.getPages());
+                p.setPrice(book.getPrice());
+                p.setDescription(book.getDescription());
+                p.setDescription(book.getLanguage());
+                p.setYear(book.getYear());
+                p.setPublisher(book.getPublisher());
+            });
+            this.company.root().getGigaBooks().store();
+        }
 	}
 
 	public void deleteByPostId(final Integer postId)
 	{
-		try (Stream<Book> stream = this.company.root().getGigaBooks().query().stream())
-		{
-			stream.filter(b -> b.getPostId() != null && b.getPostId().equals(postId))
-					.findFirst()
-					.ifPresent(book ->
-					{
-						this.company.root().getGigaBooks().remove(book);
-						this.storageManager.store(this.company.root().getGigaBooks());
-					});
-		}
+        Optional<Book> optBook = byPostId(postId);
+
+        if(optBook.isPresent())
+        {
+            Book bookToDelete = optBook.get();
+
+            this.company.root().getGigaBooks().remove(bookToDelete);
+            this.company.root().getGigaBooks().store();
+        }
 	}
 
 }

@@ -41,14 +41,14 @@ public class DebeziumChangeHandler
                 {
                     final Book book = this.mapToBook(payload.get("after"));
                     this.daoBook.insert(book);
-                    LOG.debug("Debezium INSERT/READ: Book with postId={} added to cache", book.getPostId());
+                    LOG.info("Debezium INSERT/READ: Book with postId={} added to cache", book.getPostId());
                     break;
                 }
                 case "u": // UPDATE
                 {
                     final Book book = this.mapToBook(payload.get("after"));
                     this.daoBook.update(book);
-                    LOG.debug("Debezium UPDATE: Book with postId={} updated in cache", book.getPostId());
+                    LOG.info("Debezium UPDATE: Book with postId={} updated in cache", book.getPostId());
                     break;
                 }
                 case "d": // DELETE
@@ -56,7 +56,7 @@ public class DebeziumChangeHandler
                     final JsonNode before = payload.get("before");
                     final int postId = before.get("id").asInt();
                     this.daoBook.deleteByPostId(postId);
-                    LOG.debug("Debezium DELETE: Book with postId={} removed from cache", postId);
+                    LOG.info("Debezium DELETE: Book with postId={} removed from cache", postId);
                     break;
                 }
                 default:
@@ -78,6 +78,11 @@ public class DebeziumChangeHandler
         book.setGenre(node.has("genre") && !node.get("genre").isNull() ? node.get("genre").asText() : null);
         book.setIsbn(node.has("isbn") && !node.get("isbn").isNull() ? node.get("isbn").asText() : null);
         book.setPages(node.has("pages") && !node.get("pages").isNull() ? node.get("pages").asInt() : 0);
+        book.setPublisher(node.has("publisher") && !node.get("publisher").isNull() ? node.get("publisher").asText() : null);
+        book.setDescription(node.has("description") && !node.get("description").isNull() ? node.get("description").asText() : null);
+        book.setLanguage(node.has("language") && !node.get("language").isNull() ? node.get("language").asText() : null);
+        book.setYear(node.has("year") && !node.get("year").isNull() ? node.get("year").asInt() : 0);
+        book.setPrice(node.has("price") && !node.get("price").isNull() ? node.get("price").asDouble() : 0);
         return book;
     }
 }

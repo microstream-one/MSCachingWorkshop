@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import one.microstream.domain.microstream.Book;
 import one.microstream.domain.microstream.Company;
+import org.eclipse.store.gigamap.types.IndexerInteger;
 import org.eclipse.store.gigamap.types.IndexerString;
 
 @Singleton
@@ -26,6 +27,20 @@ public class BookIndices
 			return entity.getIsbn();
 		}
 	};
+
+    public final static IndexerInteger<one.microstream.domain.microstream.Book> postgresIdIndex = new IndexerInteger.Abstract<Book>()
+    {
+        public String name()
+        {
+            return "postId";
+        }
+
+        @Override
+        public Integer getInteger(final Book entity)
+        {
+            return entity.getPostId();
+        }
+    };
 
     public final static IndexerString<one.microstream.domain.microstream.Book> TitleIndex = new IndexerString.Abstract<Book>()
     {
