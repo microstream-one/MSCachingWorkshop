@@ -7,7 +7,8 @@ import io.micronaut.serde.annotation.Serdeable;
 public record RBBookFilter(
         @Nullable String title,
         @Nullable String description,
-        @Nullable String author
+        @Nullable String author,
+        @Nullable Float score
 )
 {
 }

@@ -25,8 +25,19 @@ public class MapperBook
                 dto.year(), dto.description(), dto.language(), dto.price());
     }
 
-    public String toEmbeddingText(final PostBook b) {
-        return String.format("Titel: %s; Autor: %s; Inhalt: %s",
-                b.getTitle(), b.getAuthor(), b.getDescription());
+    public PostBook updatePostBook(final PostBook toUpdate, final DtoBook dto) {
+        toUpdate.setAuthor(dto.author());
+        toUpdate.setTitle(dto.title());
+        toUpdate.setDescription(dto.description());
+        toUpdate.setPrice(dto.price());
+        toUpdate.setPublisher(dto.publisher());
+        toUpdate.setIsbn(dto.isbn());
+        toUpdate.setDescription(dto.description());
+        toUpdate.setGenre(dto.genre());
+        toUpdate.setLanguage(dto.language());
+        toUpdate.setPages(dto.pages());
+        toUpdate.setYear(dto.year());
+
+        return toUpdate;
     }
 }

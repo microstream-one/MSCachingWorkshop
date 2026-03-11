@@ -9,6 +9,7 @@ import org.eclipse.store.gigamap.jvector.VectorIndexConfiguration;
 import org.eclipse.store.gigamap.jvector.VectorIndices;
 import org.eclipse.store.gigamap.jvector.VectorSimilarityFunction;
 import org.eclipse.store.gigamap.types.GigaMap;
+import org.eclipse.store.gigamap.types.IndexerInteger;
 import org.eclipse.store.gigamap.types.IndexerString;
 
 @Singleton
@@ -16,19 +17,19 @@ public class BookIndices
 {
     public static VectorIndex<Book> index = null;
 
-	public final static IndexerString<one.microstream.domain.microstream.Book> ISBNIndex = new IndexerString.Abstract<Book>()
-	{
-		public String name()
-		{
-			return "isbn";
-		}
+    public final static IndexerInteger<one.microstream.domain.microstream.Book> postgresIdIndex = new IndexerInteger.Abstract<Book>()
+    {
+        public String name()
+        {
+            return "postId";
+        }
 
-		@Override
-		public String getString(final Book entity)
-		{
-			return entity.getIsbn();
-		}
-	};
+        @Override
+        public Integer getInteger(final Book entity)
+        {
+            return entity.getPostId();
+        }
+    };
 
     public final static IndexerString<one.microstream.domain.microstream.Book> TitleIndex = new IndexerString.Abstract<Book>()
     {

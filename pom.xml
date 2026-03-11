@@ -19,7 +19,7 @@
         <micronaut.version>4.8.2</micronaut.version>
         <micronaut.runtime>netty</micronaut.runtime>
         <micronaut.aot.enabled>false</micronaut.aot.enabled>
-        <eclipsestore.version>4.0.0-beta3</eclipsestore.version>
+        <eclipsestore.version>4.0.0</eclipsestore.version>
         <micronaut.aot.packageName>one.microstream.aot.generated</micronaut.aot.packageName>
         <exec.mainClass>one.microstream.Application</exec.mainClass>
     </properties>

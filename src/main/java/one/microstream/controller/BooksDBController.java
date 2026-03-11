@@ -2,15 +2,13 @@ package one.microstream.controller;
 
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.http.annotation.Body;
-import io.micronaut.http.annotation.Controller;
-import io.micronaut.http.annotation.PathVariable;
-import io.micronaut.http.annotation.Post;
+import io.micronaut.http.annotation.*;
 import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
 import one.microstream.core.faker.DataFakerService;
+import one.microstream.core.mapper.MapperBook;
 import one.microstream.dao.microstream.postgres.PostDAOBook;
 import one.microstream.domain.postgres.PostBook;
 import one.microstream.dto.DtoBook;
@@ -25,6 +23,8 @@ public class BooksDBController
     PostDAOBook postDAOBook;
     @Inject
     DataFakerService dataFakerService;
+    @Inject
+    MapperBook mapperBook;
 
     @Post()
     @ExecuteOn(TaskExecutors.BLOCKING)
@@ -32,6 +32,28 @@ public class BooksDBController
     {
         PostBook inserted = postDAOBook.insert(dto);
         return HttpResponse.ok(inserted);
+    }
+
+    @Put("/update")
+    HttpResponse<?> updateBook(@Body DtoBook dto)
+    {
+        try {
+            PostBook updated = postDAOBook.update(dto);
+            return HttpResponse.ok(mapperBook.toDto(updated));
+        } catch (Exception ex) {
+            return HttpResponse.notFound("Book to update not found");
+        }
+    }
+
+    @Delete("/delete/{id}")
+    HttpResponse<?> deleteBook(@NonNull @NotBlank @PathVariable Integer id)
+    {
+        try {
+            postDAOBook.delete(id);
+            return HttpResponse.ok("Book successfully deleted");
+        } catch (Exception ex) {
+            return HttpResponse.notFound("Book to update not found");
+        }
     }
 
     @Post("/createMockupBooks/{amount}")

@@ -38,9 +38,8 @@ public class BookCacheController
     @Get("/search{?filter*}")
     public HttpResponse<?> searchBooks(@RequestBean RBBookFilter filter)
     {
-//        String embeddingText = embeddingService.toEmbeddingText(filter);
-        float[] vectorize = embeddingService.vectorize("search_query: " + filter.title());
-        List<Book> books = daoBook.searchBooks(vectorize);
+        float[] vectorize = embeddingService.vectorize(filter.title());
+        List<Book> books = daoBook.searchBooks(vectorize, filter.score());
 
         return HttpResponse.ok(books);
     }

@@ -1,7 +1,9 @@
 package one.microstream.dao.microstream.postgres;
 
+import io.micronaut.core.annotation.NonNull;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import jakarta.validation.constraints.NotBlank;
 import one.microstream.core.mapper.MapperBook;
 import one.microstream.domain.postgres.PostBook;
 import one.microstream.dto.DtoBook;
@@ -9,6 +11,7 @@ import one.microstream.repositories.RepoBook;
 
 import javax.swing.text.html.StyleSheet;
 import java.util.List;
+import java.util.Optional;
 
 @Singleton
 public class PostDAOBook
@@ -28,6 +31,23 @@ public class PostDAOBook
     {
         final PostBook saved = this.repoBook.save(book);
         return saved;
+    }
+
+    public PostBook update(final DtoBook dto) throws RuntimeException
+    {
+        Optional<PostBook> byId = repoBook.findById(dto.id());
+
+        if(byId.isPresent())
+        {
+            return this.repoBook.update(this.mapperBook.updatePostBook(byId.get(), dto));
+        }
+        else {
+            throw new RuntimeException("Book not found");
+        }
+    }
+
+    public void delete(@NonNull @NotBlank Integer id) {
+        this.repoBook.deleteById(id);
     }
 
     public List<PostBook> findAll()

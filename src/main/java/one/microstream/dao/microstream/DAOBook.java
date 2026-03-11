@@ -37,14 +37,7 @@ public class DAOBook
         }
     }
 
-    public List<Book> allBooks()
-    {
-        GigaIterator<Book> iterator = company.root().getGigaBooks().iterator();
-        List<Book> collect = Stream.generate(iterator::next).collect(Collectors.toUnmodifiableList());
-        return collect;
-    }
-
-    public List<Book> searchBooks(float[] filter)
+    public List<Book> searchBooks(float[] filter, Float score)
     {
         VectorIndices<Book> keyValues = company.root().gigaBooks.index().get(VectorIndices.Category());
         VectorIndex<Book> index = keyValues.iterator().next().value();
@@ -57,8 +50,13 @@ public class DAOBook
             System.out.printf("%s, score=%s%n", similar.getTitle(), entry.score());
         });
 
-        return result.stream().filter(e -> e.score() >= 0.80f)
+        return result.stream().filter(e -> e.score() >= score)
                 .map(vsr -> vsr.entity()).collect(Collectors.toUnmodifiableList());
+    }
+
+    public Optional<Book> byPostId(Integer postId)
+    {
+        return company.root().getGigaBooks().query(BookIndices.postgresIdIndex.is(postId)).findFirst();
     }
 
 	public void insert(final Book book)
@@ -67,49 +65,42 @@ public class DAOBook
         this.company.root().getGigaBooks().store();
 	}
 
-    //TODO Improve implementation
 	public void update(final Book book)
 	{
-		try (Stream<Book> stream = this.company.root().getGigaBooks().query().stream())
-		{
-			final Optional<Book> existing = stream
-					.filter(b -> b.getPostId() != null && b.getPostId().equals(book.getPostId()))
-					.findFirst();
+        Optional<Book> optBook = byPostId(book.getPostId());
 
-			if (existing.isPresent())
-			{
-				final Book found = existing.get();
-				found.setTitle(book.getTitle());
-				found.setAuthor(book.getAuthor());
-				found.setGenre(book.getGenre());
-				found.setIsbn(book.getIsbn());
-				found.setPages(book.getPages());
-                found.setPrice(book.getPrice());
-                found.setDescription(book.getDescription());
-                found.setDescription(book.getLanguage());
-                found.setYear(book.getYear());
-                found.setPublisher(book.getPublisher());
-                this.company.root().getGigaBooks().store();
-			}
-			else
-			{
-				this.insert(book);
-			}
-		}
+        if(optBook.isPresent())
+        {
+            Book bookToChange = optBook.get();
+
+            this.company.root().getGigaBooks().update(bookToChange, p ->
+            {
+                p.setTitle(book.getTitle());
+                p.setAuthor(book.getAuthor());
+                p.setGenre(book.getGenre());
+                p.setIsbn(book.getIsbn());
+                p.setPages(book.getPages());
+                p.setPrice(book.getPrice());
+                p.setDescription(book.getDescription());
+                p.setDescription(book.getLanguage());
+                p.setYear(book.getYear());
+                p.setPublisher(book.getPublisher());
+            });
+            this.company.root().getGigaBooks().store();
+        }
 	}
 
 	public void deleteByPostId(final Integer postId)
 	{
-		try (Stream<Book> stream = this.company.root().getGigaBooks().query().stream())
-		{
-			stream.filter(b -> b.getPostId() != null && b.getPostId().equals(postId))
-					.findFirst()
-					.ifPresent(book ->
-					{
-						this.company.root().getGigaBooks().remove(book);
-						this.storageManager.store(this.company.root().getGigaBooks());
-					});
-		}
+        Optional<Book> optBook = byPostId(postId);
+
+        if(optBook.isPresent())
+        {
+            Book bookToDelete = optBook.get();
+
+            this.company.root().getGigaBooks().remove(bookToDelete);
+            this.company.root().getGigaBooks().store();
+        }
 	}
 
 }
