@@ -7,6 +7,7 @@ import io.micronaut.eclipsestore.RootProvider;
 import jakarta.inject.Singleton;
 import one.microstream.domain.microstream.Company;
 import org.eclipse.datagrid.cluster.nodelibrary.types.ClusterLockScope;
+import org.eclipse.serializer.concurrency.LockedExecutor;
 import org.eclipse.store.storage.types.StorageManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,7 @@ public class DebeziumConfig
     public Properties buildProperties(
         final StorageManager storageManager,
         final RootProvider<Company> rootProvider,
-        final ClusterLockScope lockScope
+        final LockedExecutor lockedExecutor
     )
     {
         final Properties props = new Properties();
@@ -40,9 +41,9 @@ public class DebeziumConfig
         props.setProperty("offset.storage", "one.microstream.core.debezium.EclipseStoreOffsetBackingStore");
         props.setProperty("offset.flush.interval.ms", "1000");
 
-        props.put("offset.storage.storage.manager", storageManager);
-        props.put("offset.storage.root.provider", rootProvider);
-        props.put("offset.storage.lock.scope", lockScope);
+        props.put("one.microstream.storage.manager", storageManager);
+        props.put("one.microstream.root.provider", rootProvider);
+        props.put("one.microstream.locked.executor", lockedExecutor);
 
         // Database connection from existing properties
         final JdbcUrlParts urlParts = parseJdbcUrl(this.jdbcUrl);

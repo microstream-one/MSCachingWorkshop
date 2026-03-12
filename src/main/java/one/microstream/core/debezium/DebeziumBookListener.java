@@ -16,6 +16,7 @@ import one.microstream.domain.microstream.Company;
 import org.eclipse.datagrid.cluster.nodelibrary.types.ClusterFoundation;
 import org.eclipse.datagrid.cluster.nodelibrary.types.ClusterLockScope;
 import org.eclipse.datagrid.cluster.nodelibrary.types.StorageNodeManager;
+import org.eclipse.serializer.concurrency.LockedExecutor;
 import org.eclipse.store.storage.types.StorageManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,7 @@ public class DebeziumBookListener implements ApplicationEventListener<Object>
     @Inject
     StorageManager storageManager;
     @Inject
-    ClusterLockScope lockScope;
+    LockedExecutor lockedExecutor;
 
     public DebeziumBookListener(final ClusterFoundation<?> clusterFoundation)
     {
@@ -78,7 +79,7 @@ public class DebeziumBookListener implements ApplicationEventListener<Object>
     private void startEngine()
     {
         this.engine = DebeziumEngine.create(Json.class)
-            .using(this.debeziumConfig.buildProperties(this.storageManager, this.rootProvider, this.lockScope))
+            .using(this.debeziumConfig.buildProperties(this.storageManager, this.rootProvider, this.lockedExecutor))
             .notifying(this.changeHandler::handleChangeEvent)
             .build();
 

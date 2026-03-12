@@ -14,6 +14,7 @@ import org.apache.kafka.connect.storage.FileOffsetBackingStore;
 import org.apache.kafka.connect.storage.MemoryOffsetBackingStore;
 import org.apache.kafka.connect.storage.OffsetUtils;
 import org.eclipse.datagrid.cluster.nodelibrary.types.ClusterLockScope;
+import org.eclipse.serializer.concurrency.LockedExecutor;
 import org.eclipse.store.storage.types.StorageManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,16 +24,14 @@ public class EclipseStoreOffsetBackingStore extends MemoryOffsetBackingStore
     private static final Logger log = LoggerFactory.getLogger(FileOffsetBackingStore.class);
 
     private final Map<String, Set<Map<String, Object>>> connectorPartitions;
-    private final Converter keyConverter;
 
     private StorageManager storageManager;
     private RootProvider<Company> rootProvider;
-    private ClusterLockScope lockScope;
+    private LockedExecutor lockedExecutor;
 
-    public EclipseStoreOffsetBackingStore(final Converter keyConverter)
+    public EclipseStoreOffsetBackingStore()
     {
         this.connectorPartitions = new HashMap<>();
-        this.keyConverter = keyConverter;
     }
 
     @SuppressWarnings("unchecked")
@@ -40,9 +39,9 @@ public class EclipseStoreOffsetBackingStore extends MemoryOffsetBackingStore
     public void configure(final WorkerConfig config)
     {
         super.configure(config);
-        this.storageManager = (StorageManager)config.originals().get("offset.storage.storage.manager");
-        this.rootProvider = (RootProvider<Company>)config.originals().get("offset.storage.root.provider");
-        this.lockScope = (ClusterLockScope)config.originals().get("offset.storage.lock.scope");
+        this.storageManager = (StorageManager)config.originals().get("one.microstream.storage.manager");
+        this.rootProvider = (RootProvider<Company>)config.originals().get("one.microstream.root.provider");
+        this.lockedExecutor = (LockedExecutor)config.originals().get("one.microstream.locked.executor");
     }
 
     @Override
@@ -64,7 +63,7 @@ public class EclipseStoreOffsetBackingStore extends MemoryOffsetBackingStore
     @SuppressWarnings("unchecked")
     private void load()
     {
-        this.lockScope.read(() ->
+        this.lockedExecutor.read(() ->
         {
             final var raw = this.rootProvider.root().debeziumOffsetStore;
             this.data = new HashMap<>();
@@ -73,12 +72,6 @@ public class EclipseStoreOffsetBackingStore extends MemoryOffsetBackingStore
                 final var key = (mapEntry.getKey() != null) ? ByteBuffer.wrap(mapEntry.getKey()) : null;
                 final var value = (mapEntry.getValue() != null) ? ByteBuffer.wrap(mapEntry.getValue()) : null;
                 this.data.put(key, value);
-                OffsetUtils.processPartitionKey(
-                    mapEntry.getKey(),
-                    mapEntry.getValue(),
-                    this.keyConverter,
-                    this.connectorPartitions
-                );
             }
         });
     }
@@ -86,7 +79,7 @@ public class EclipseStoreOffsetBackingStore extends MemoryOffsetBackingStore
     @Override
     protected void save()
     {
-        this.lockScope.write(() ->
+        this.lockedExecutor.write(() ->
         {
             final var raw = new HashMap<byte[], byte[]>();
             for (final var mapEntry : this.data.entrySet())
@@ -94,7 +87,6 @@ public class EclipseStoreOffsetBackingStore extends MemoryOffsetBackingStore
                 final byte[] key = (mapEntry.getKey() != null) ? mapEntry.getKey().array() : null;
                 final byte[] value = (mapEntry.getValue() != null) ? mapEntry.getValue().array() : null;
                 raw.put(key, value);
-                OffsetUtils.processPartitionKey(key, value, this.keyConverter, this.connectorPartitions);
             }
             final var root = this.rootProvider.root();
             root.debeziumOffsetStore = raw;
