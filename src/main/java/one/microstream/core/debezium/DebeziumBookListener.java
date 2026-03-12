@@ -1,20 +1,24 @@
 package one.microstream.core.debezium;
 
+import java.io.IOException;
+
 import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import io.debezium.engine.format.Json;
 import io.micronaut.context.event.ApplicationEventListener;
+import io.micronaut.eclipsestore.RootProvider;
 import io.micronaut.runtime.event.ApplicationStartupEvent;
 import io.micronaut.runtime.server.event.ServerShutdownEvent;
 import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import one.microstream.domain.microstream.Company;
 import org.eclipse.datagrid.cluster.nodelibrary.types.ClusterFoundation;
+import org.eclipse.datagrid.cluster.nodelibrary.types.ClusterLockScope;
 import org.eclipse.datagrid.cluster.nodelibrary.types.StorageNodeManager;
+import org.eclipse.store.storage.types.StorageManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 @Singleton
 public class DebeziumBookListener implements ApplicationEventListener<Object>
@@ -28,17 +32,23 @@ public class DebeziumBookListener implements ApplicationEventListener<Object>
 
     @Inject
     DebeziumConfig debeziumConfig;
-
     @Inject
     DebeziumChangeHandler changeHandler;
+
+    @Inject
+    RootProvider<Company> rootProvider;
+    @Inject
+    StorageManager storageManager;
+    @Inject
+    ClusterLockScope lockScope;
 
     public DebeziumBookListener(final ClusterFoundation<?> clusterFoundation)
     {
         final var props = clusterFoundation.getNodelibraryPropertiesProvider();
         this.isProdMode = props.isProdMode();
         this.clusterNodeManager = this.isProdMode && !props.isBackupNode()
-                ? clusterFoundation.getStorageNodeManager()
-                : null;
+                                  ? clusterFoundation.getStorageNodeManager()
+                                  : null;
     }
 
     @Override
@@ -68,9 +78,9 @@ public class DebeziumBookListener implements ApplicationEventListener<Object>
     private void startEngine()
     {
         this.engine = DebeziumEngine.create(Json.class)
-                .using(this.debeziumConfig.buildProperties())
-                .notifying(this.changeHandler::handleChangeEvent)
-                .build();
+            .using(this.debeziumConfig.buildProperties(this.storageManager, this.rootProvider, this.lockScope))
+            .notifying(this.changeHandler::handleChangeEvent)
+            .build();
 
         final Thread engineThread = new Thread(this.engine, "debezium-engine");
         engineThread.setDaemon(true);

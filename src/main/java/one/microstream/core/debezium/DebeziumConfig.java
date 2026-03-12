@@ -1,14 +1,15 @@
 package one.microstream.core.debezium;
 
+import java.util.Properties;
+
 import io.micronaut.context.annotation.Value;
+import io.micronaut.eclipsestore.RootProvider;
 import jakarta.inject.Singleton;
+import one.microstream.domain.microstream.Company;
+import org.eclipse.datagrid.cluster.nodelibrary.types.ClusterLockScope;
+import org.eclipse.store.storage.types.StorageManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Properties;
 
 @Singleton
 public class DebeziumConfig
@@ -24,19 +25,24 @@ public class DebeziumConfig
     @Value("${datasources.default.password}")
     private String password;
 
-    public Properties buildProperties()
+    public Properties buildProperties(
+        final StorageManager storageManager,
+        final RootProvider<Company> rootProvider,
+        final ClusterLockScope lockScope
+    )
     {
-        ensureDirectoryExists();
-
         final Properties props = new Properties();
 
         props.setProperty("name", "engine");
 
         // Connector configuration
         props.setProperty("connector.class", "io.debezium.connector.postgresql.PostgresConnector");
-        props.setProperty("offset.storage", "org.apache.kafka.connect.storage.FileOffsetBackingStore");
-        props.setProperty("offset.storage.file.filename", "debezium/offsets.dat");
+        props.setProperty("offset.storage", "one.microstream.core.debezium.EclipseStoreOffsetBackingStore");
         props.setProperty("offset.flush.interval.ms", "1000");
+
+        props.put("offset.storage.storage.manager", storageManager);
+        props.put("offset.storage.root.provider", rootProvider);
+        props.put("offset.storage.lock.scope", lockScope);
 
         // Database connection from existing properties
         final JdbcUrlParts urlParts = parseJdbcUrl(this.jdbcUrl);
@@ -63,18 +69,6 @@ public class DebeziumConfig
         return props;
     }
 
-    private void ensureDirectoryExists()
-    {
-        try
-        {
-            Files.createDirectories(Path.of("debezium"));
-        }
-        catch (final IOException e)
-        {
-            throw new RuntimeException("Could not create debezium directory", e);
-        }
-    }
-
     private JdbcUrlParts parseJdbcUrl(final String url)
     {
         // jdbc:postgresql://host:port/dbname
@@ -82,11 +76,13 @@ public class DebeziumConfig
         final String[] hostPortAndDb = stripped.split("/", 2);
         final String[] hostAndPort = hostPortAndDb[0].split(":");
         return new JdbcUrlParts(
-                hostAndPort[0],
-                hostAndPort.length > 1 ? Integer.parseInt(hostAndPort[1]) : 5432,
-                hostPortAndDb.length > 1 ? hostPortAndDb[1] : ""
+            hostAndPort[0],
+            hostAndPort.length > 1 ? Integer.parseInt(hostAndPort[1]) : 5432,
+            hostPortAndDb.length > 1 ? hostPortAndDb[1] : ""
         );
     }
 
-    private record JdbcUrlParts(String host, int port, String dbName) {}
+    private record JdbcUrlParts(String host, int port, String dbName)
+    {
+    }
 }
