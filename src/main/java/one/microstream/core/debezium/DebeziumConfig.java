@@ -39,11 +39,13 @@ public class DebeziumConfig
         // Connector configuration
         props.setProperty("connector.class", "io.debezium.connector.postgresql.PostgresConnector");
         props.setProperty("offset.storage", "one.microstream.core.debezium.EclipseStoreOffsetBackingStore");
+        //props.setProperty("offset.storage", "org.apache.kafka.connect.storage.FileOffsetBackingStore");
+        //props.setProperty("offset.storage.file.filename", "debezium/offsets.dat");
         props.setProperty("offset.flush.interval.ms", "1000");
 
-        props.put("one.microstream.storage.manager", storageManager);
-        props.put("one.microstream.root.provider", rootProvider);
-        props.put("one.microstream.locked.executor", lockedExecutor);
+        Instances.storageManager(storageManager);
+        Instances.rootProvider(rootProvider);
+        Instances.lockedExecutor(lockedExecutor);
 
         // Database connection from existing properties
         final JdbcUrlParts urlParts = parseJdbcUrl(this.jdbcUrl);
