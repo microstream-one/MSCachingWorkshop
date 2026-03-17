@@ -60,6 +60,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
         <dependency>
             <groupId>org.eclipse.store</groupId>
             <artifactId>storage-embedded-configuration</artifactId>
@@ -157,6 +158,12 @@
         <dependency>
             <groupId>io.micronaut.data</groupId>
             <artifactId>micronaut-data-model</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.store</groupId>
+            <artifactId>cache-hibernate</artifactId>
+            <version>4.0.1</version>
         </dependency>
 
         <!-- PostgreSQL -->

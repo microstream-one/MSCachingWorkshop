@@ -1,80 +1,130 @@
 package one.microstream.dao.microstream;
 
-import io.micronaut.core.annotation.NonNull;
-import io.micronaut.eclipsestore.RootProvider;
-import io.micronaut.http.HttpResponse;
-import jakarta.inject.Inject;
-import jakarta.validation.constraints.NotBlank;
-import one.microstream.domain.indices.BookIndices;
-import one.microstream.domain.microstream.Book;
-import one.microstream.domain.microstream.Company;
-import org.eclipse.store.storage.types.StorageManager;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class DAOBook
+import io.micronaut.core.annotation.NonNull;
+import io.micronaut.eclipsestore.RootProvider;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.validation.constraints.NotBlank;
+import one.microstream.domain.indices.BookIndices;
+import one.microstream.domain.microstream.Book;
+import one.microstream.domain.microstream.Company;
+import org.eclipse.datagrid.cluster.nodelibrary.types.ClusterLockScope;
+import org.eclipse.serializer.concurrency.LockedExecutor;
+
+@Singleton
+public class DAOBook extends ClusterLockScope
 {
-	@Inject
-	RootProvider<Company> company;
+    @Inject
+    RootProvider<Company> company;
+
+    public DAOBook(final LockedExecutor lockedExecutor)
+    {
+        super(lockedExecutor);
+    }
 
     public List<Book> pageBooks(@NonNull @NotBlank int limit)
     {
-        try(Stream<Book> stream = company.root().getGigaBooks().query().stream())
+        return this.read(() ->
         {
-            return stream.limit(limit).collect(Collectors.toList());
-        }
+            try (Stream<Book> stream = company.root().getGigaBooks().query().stream())
+            {
+                return stream.limit(limit).collect(Collectors.toList());
+            }
+        });
     }
 
     public Optional<Book> byPostId(Integer postId)
     {
-        return company.root().getGigaBooks().query(BookIndices.postgresIdIndex.is(postId)).findFirst();
+        return this.read(() -> this.company.root()
+            .getGigaBooks()
+            .query(BookIndices.postgresIdIndex.is(postId))
+            .findFirst());
     }
 
-	public void insert(final Book book)
-	{
-        this.company.root().getGigaBooks().add(book);
-        this.company.root().getGigaBooks().store();
-	}
+    public List<Book> findByTitle(final String titleSearch)
+    {
+        return this.read(() -> this.company.root()
+            .gigaBooks
+            .query(BookIndices.TitleIndex.containsIgnoreCase(titleSearch))
+            .toList());
+    }
 
-	public void update(final Book book)
-	{
-        Optional<Book> optBook = byPostId(book.getPostId());
+    public Optional<Book> findByIsbn(final String isbn)
+    {
+        return this.read(() -> this.company.root()
+                .gigaBooks
+                .query(BookIndices.ISBNIndex.is(isbn))
+                .findFirst());
+    }
 
-        if(optBook.isPresent())
+    public List<String> findAllIsbn()
+    {
+        return this.read(() ->
         {
-            Book bookToChange = optBook.get();
-
-            this.company.root().getGigaBooks().update(bookToChange, p ->
+            try (final var stream = this.company.root().gigaBooks.query().stream())
             {
-                p.setTitle(book.getTitle());
-                p.setAuthor(book.getAuthor());
-                p.setGenre(book.getGenre());
-                p.setIsbn(book.getIsbn());
-                p.setPages(book.getPages());
-                p.setPrice(book.getPrice());
-                p.setDescription(book.getDescription());
-                p.setDescription(book.getLanguage());
-                p.setYear(book.getYear());
-                p.setPublisher(book.getPublisher());
-            });
-            this.company.root().getGigaBooks().store();
-        }
-	}
+                return stream.map(Book::getIsbn).toList();
+            }
+        });
+    }
 
-	public void deleteByPostId(final Integer postId)
-	{
-        Optional<Book> optBook = byPostId(postId);
-
-        if(optBook.isPresent())
+    public void insert(final Book book)
+    {
+        this.write(() ->
         {
-            Book bookToDelete = optBook.get();
-
-            this.company.root().getGigaBooks().remove(bookToDelete);
+            this.company.root().getGigaBooks().add(book);
             this.company.root().getGigaBooks().store();
-        }
-	}
+        });
+    }
 
+    public void update(final Book book)
+    {
+        this.write(() ->
+        {
+            Optional<Book> optBook = byPostId(book.getPostId());
+
+            if (optBook.isPresent())
+            {
+                Book bookToChange = optBook.get();
+
+                this.company.root().getGigaBooks().update(
+                    bookToChange, p ->
+                    {
+                        p.setTitle(book.getTitle());
+                        p.setAuthor(book.getAuthor());
+                        p.setGenre(book.getGenre());
+                        p.setIsbn(book.getIsbn());
+                        p.setPages(book.getPages());
+                        p.setPrice(book.getPrice());
+                        p.setDescription(book.getDescription());
+                        p.setDescription(book.getLanguage());
+                        p.setYear(book.getYear());
+                        p.setPublisher(book.getPublisher());
+                    }
+                );
+                this.company.root().getGigaBooks().store();
+            }
+        });
+    }
+
+    public void deleteByPostId(final Integer postId)
+    {
+        this.write(() ->
+        {
+            Optional<Book> optBook = byPostId(postId);
+
+            if (optBook.isPresent())
+            {
+                Book bookToDelete = optBook.get();
+
+                this.company.root().getGigaBooks().remove(bookToDelete);
+                this.company.root().getGigaBooks().store();
+            }
+        });
+    }
 }

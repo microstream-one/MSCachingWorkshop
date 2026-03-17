@@ -27,6 +27,8 @@ public class DebeziumEngineManager
     private final StorageNodeManager clusterNodeManager;
     private final boolean isProd;
 
+    private volatile boolean shuttingDown = false;
+
     private DebeziumEngine<ChangeEvent<String, String>> engine;
     private Thread debeziumThread;
 
@@ -46,7 +48,7 @@ public class DebeziumEngineManager
     {
         final var props = clusterFoundation.getNodelibraryPropertiesProvider();
         this.isProd = props.isProdMode();
-        this.clusterNodeManager = isProd && !props.isBackupNode()
+        this.clusterNodeManager = this.isProd && !props.isBackupNode()
                                   ? clusterFoundation.getStorageNodeManager()
                                   : null;
     }
@@ -54,7 +56,7 @@ public class DebeziumEngineManager
     @Scheduled(fixedDelay = "5s")
     public void checkForDistributor()
     {
-        if (this.engine == null && (!this.isProd
+        if (!this.shuttingDown && this.engine == null && (!this.isProd
             || this.clusterNodeManager != null && this.clusterNodeManager.isDistributor()))
         {
             this.startEngine();
@@ -77,6 +79,8 @@ public class DebeziumEngineManager
     @PreDestroy
     public void stopEngine() throws InterruptedException
     {
+        this.shuttingDown = true;
+
         if (this.engine == null)
         {
             return;

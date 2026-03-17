@@ -7,6 +7,8 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import one.microstream.dao.microstream.DAOBook;
 import one.microstream.domain.microstream.Book;
+import one.microstream.domain.microstream.Company;
+import org.eclipse.serializer.reference.LazyReferenceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +18,7 @@ public class DebeziumChangeHandler
     private static final Logger LOG = LoggerFactory.getLogger(DebeziumChangeHandler.class);
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private int count = 0;
 
     @Inject
     DAOBook daoBook;
@@ -66,6 +69,16 @@ public class DebeziumChangeHandler
         catch (final Exception e)
         {
             LOG.error("Error processing Debezium change event", e);
+        }
+
+        count++;
+
+        if(count % 500 == 0)
+        {
+            System.out.println("Running gc...");
+            LazyReferenceManager.get().cleanUp();
+            System.gc();
+            count = 0;
         }
     }
 
