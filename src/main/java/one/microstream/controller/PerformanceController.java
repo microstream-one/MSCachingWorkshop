@@ -19,6 +19,8 @@ import one.microstream.domain.microstream.Book;
 import one.microstream.domain.postgres.PostBook;
 import one.microstream.repositories.RepoBook;
 import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.serializer.reference.Lazy;
+import org.eclipse.serializer.reference.LazyReferenceManager;
 
 @Controller("/perf/books")
 public class PerformanceController
@@ -70,6 +72,13 @@ public class PerformanceController
         this.isbns.clear();
         this.isbns.addAll(this.es.findAllIsbn());
         System.out.printf("Caching %d book isbns", this.isbns.size());
+    }
+
+    @Get("/clean")
+    void clean()
+    {
+        LazyReferenceManager.get().cleanUp(Lazy.Checker(0.25));
+        System.gc();
     }
 
     @Get("/random/isbn")
