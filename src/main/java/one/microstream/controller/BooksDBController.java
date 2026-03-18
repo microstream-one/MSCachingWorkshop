@@ -60,8 +60,7 @@ public class BooksDBController
     HttpResponse<List<PostBook>> createMockupBooks(@NonNull @NotBlank @PathVariable Integer amount)
     {
         List<PostBook> books = dataFakerService.createBooks(amount);
-        List<PostBook> postBooks = books.stream().map(book -> postDAOBook.insert(book))
-                .collect(Collectors.toUnmodifiableList());
+        List<PostBook> postBooks = books.stream().map(postDAOBook::insert).toList();
         return HttpResponse.ok(postBooks);
     }
 }

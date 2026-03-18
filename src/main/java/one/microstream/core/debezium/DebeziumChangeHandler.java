@@ -3,6 +3,7 @@ package one.microstream.core.debezium;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.debezium.engine.ChangeEvent;
+import io.micronaut.eclipsestore.RootProvider;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import one.microstream.dao.microstream.DAOBook;
@@ -19,6 +20,9 @@ public class DebeziumChangeHandler
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private int count = 0;
+
+    @Inject
+    RootProvider<Company> rootProvider;
 
     @Inject
     DAOBook daoBook;
@@ -43,7 +47,9 @@ public class DebeziumChangeHandler
                 case "r": // READ (snapshot)
                 {
                     final Book book = this.mapToBook(payload.get("after"));
-                    this.daoBook.insert(book);
+                    // NOTE: Instead of inserting each one we store after every 500th entry to combat write spam
+                    //this.daoBook.insert(book);
+                    this.rootProvider.root().gigaBooks.add(book);
                     LOG.info("Debezium INSERT/READ: Book with postId={} added to cache", book.getPostId());
                     break;
                 }
@@ -75,7 +81,8 @@ public class DebeziumChangeHandler
 
         if(count % 500 == 0)
         {
-            System.out.println("Running gc...");
+            System.out.println("Storing...");
+            this.rootProvider.root().gigaBooks.store();
             LazyReferenceManager.get().cleanUp();
             System.gc();
             count = 0;
