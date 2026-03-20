@@ -5,8 +5,7 @@ import java.util.Properties;
 import io.micronaut.context.annotation.Value;
 import io.micronaut.eclipsestore.RootProvider;
 import jakarta.inject.Singleton;
-import one.microstream.domain.microstream.Company;
-import org.eclipse.datagrid.cluster.nodelibrary.types.ClusterLockScope;
+import one.microstream.domain.microstream.DataRoot;
 import org.eclipse.serializer.concurrency.LockedExecutor;
 import org.eclipse.store.storage.types.StorageManager;
 import org.slf4j.Logger;
@@ -28,7 +27,7 @@ public class DebeziumConfig
 
     public Properties buildProperties(
         final StorageManager storageManager,
-        final RootProvider<Company> rootProvider,
+        final RootProvider<DataRoot> rootProvider,
         final LockedExecutor lockedExecutor
     )
     {

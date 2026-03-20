@@ -1,4 +1,4 @@
-package one.microstream.dao.microstream.postgres;
+package one.microstream.dao.postgres;
 
 import io.micronaut.core.annotation.NonNull;
 import jakarta.inject.Inject;
@@ -9,7 +9,6 @@ import one.microstream.domain.postgres.PostBook;
 import one.microstream.dto.DtoBook;
 import one.microstream.repositories.RepoBook;
 
-import javax.swing.text.html.StyleSheet;
 import java.util.List;
 import java.util.Optional;
 

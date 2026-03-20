@@ -2,15 +2,12 @@ package one.microstream.dao.microstream;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import io.micronaut.core.annotation.NonNull;
 import io.micronaut.eclipsestore.RootProvider;
 import jakarta.inject.Singleton;
-import jakarta.validation.constraints.NotBlank;
 import one.microstream.domain.indices.BookIndices;
 import one.microstream.domain.microstream.Book;
-import one.microstream.domain.microstream.Company;
+import one.microstream.domain.microstream.DataRoot;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.WildcardQuery;
 import org.eclipse.datagrid.cluster.nodelibrary.types.ClusterLockScope;
@@ -20,26 +17,25 @@ import org.eclipse.store.gigamap.lucene.LuceneIndex;
 @Singleton
 public class DAOBook extends ClusterLockScope
 {
-    private final Company root;
+    private final DataRoot root;
     private final LuceneIndex<Book> luceneIndex;
 
-    public DAOBook(final LockedExecutor lockedExecutor, final RootProvider<Company> rootProvider)
+    public DAOBook(final LockedExecutor lockedExecutor, final RootProvider<DataRoot> rootProvider)
     {
         super(lockedExecutor);
         this.root = rootProvider.root();
         //noinspection unchecked
-        this.luceneIndex = rootProvider.root().gigaBooks.index().get(LuceneIndex.class);
+        this.luceneIndex = rootProvider.root().getGigaBooks().index().get(LuceneIndex.class);
     }
 
-    public List<Book> pageBooks(@NonNull @NotBlank int limit)
+    public List<Book> pageBooks(final int limit)
     {
-        return this.read(() ->
-        {
-            try (final var stream = this.root.getGigaBooks().query().stream())
-            {
-                return stream.limit(limit).collect(Collectors.toList());
-            }
-        });
+        return this.read(() -> this.root.getGigaBooks().query().toList(limit));
+    }
+
+    public List<Book> pageBooks(final int limit, final int offset)
+    {
+        return this.read(() -> this.root.getGigaBooks().query().toList(limit, offset));
     }
 
     public Optional<Book> byPostId(final Integer postId)
@@ -59,7 +55,7 @@ public class DAOBook extends ClusterLockScope
     public Optional<Book> findByIsbn(final String isbn)
     {
         return this.read(() -> this.root
-            .gigaBooks
+            .getGigaBooks()
             .query(BookIndices.ISBN.is(isbn))
             .findFirst());
     }
@@ -68,7 +64,7 @@ public class DAOBook extends ClusterLockScope
     {
         return this.read(() ->
         {
-            try (final var stream = this.root.gigaBooks.query().stream())
+            try (final var stream = this.root.getGigaBooks().query().stream())
             {
                 return stream.map(Book::getIsbn).toList();
             }

@@ -8,8 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import one.microstream.dao.microstream.DAOBook;
 import one.microstream.domain.microstream.Book;
-import one.microstream.domain.microstream.Company;
-import org.eclipse.serializer.reference.LazyReferenceManager;
+import one.microstream.domain.microstream.DataRoot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +20,7 @@ public class DebeziumChangeHandler
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
-    RootProvider<Company> rootProvider;
+    RootProvider<DataRoot> rootProvider;
 
     @Inject
     DAOBook daoBook;

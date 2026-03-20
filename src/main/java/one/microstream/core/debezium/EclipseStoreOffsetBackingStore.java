@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import io.micronaut.eclipsestore.RootProvider;
-import one.microstream.domain.microstream.Company;
+import one.microstream.domain.microstream.DataRoot;
 import org.apache.kafka.connect.json.JsonConverter;
 import org.apache.kafka.connect.json.JsonConverterConfig;
 import org.apache.kafka.connect.runtime.WorkerConfig;
@@ -28,7 +28,7 @@ public class EclipseStoreOffsetBackingStore extends MemoryOffsetBackingStore
     private final Converter keyConverter = new JsonConverter();
 
     private StorageManager storageManager;
-    private RootProvider<Company> rootProvider;
+    private RootProvider<DataRoot> rootProvider;
     private LockedExecutor lockedExecutor;
 
     public EclipseStoreOffsetBackingStore()
@@ -68,7 +68,7 @@ public class EclipseStoreOffsetBackingStore extends MemoryOffsetBackingStore
     {
         this.lockedExecutor.read(() ->
         {
-            final var raw = this.rootProvider.root().debeziumOffsetStore;
+            final var raw = this.rootProvider.root().getDebeziumOffsetStore();
             this.data = new HashMap<>();
             for (final var mapEntry : raw.entrySet())
             {
@@ -99,7 +99,7 @@ public class EclipseStoreOffsetBackingStore extends MemoryOffsetBackingStore
                 OffsetUtils.processPartitionKey(key, value, keyConverter, connectorPartitions);
             }
             final var root = this.rootProvider.root();
-            root.debeziumOffsetStore = raw;
+            root.setDebeziumOffsetStore(raw);
             this.storageManager.store(root);
         });
     }

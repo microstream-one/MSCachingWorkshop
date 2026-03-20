@@ -11,7 +11,7 @@ import io.micronaut.scheduling.annotation.Scheduled;
 import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import one.microstream.domain.microstream.Company;
+import one.microstream.domain.microstream.DataRoot;
 import org.eclipse.datagrid.cluster.nodelibrary.types.ClusterFoundation;
 import org.eclipse.datagrid.cluster.nodelibrary.types.StorageNodeManager;
 import org.eclipse.serializer.concurrency.LockedExecutor;
@@ -38,7 +38,7 @@ public class DebeziumEngineManager
     DebeziumChangeHandler changeHandler;
 
     @Inject
-    RootProvider<Company> rootProvider;
+    RootProvider<DataRoot> rootProvider;
     @Inject
     StorageManager storageManager;
     @Inject
@@ -73,8 +73,8 @@ public class DebeziumEngineManager
             .build();
 
         System.out.print("DEBEZIUM ROOT SIZE: ");
-        System.out.println(this.rootProvider.root().debeziumOffsetStore.size());
-        for(final var entry : this.rootProvider.root().debeziumOffsetStore.entrySet())
+        System.out.println(this.rootProvider.root().getDebeziumOffsetStore().size());
+        for(final var entry : this.rootProvider.root().getDebeziumOffsetStore().entrySet())
         {
             System.out.println("Entry key size: " + entry.getKey().length + ", value size: " + entry.getValue().length);
         }

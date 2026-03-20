@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Random;
 import java.util.function.Supplier;
 
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
-import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.QueryValue;
 import io.micronaut.http.exceptions.HttpStatusException;
 import io.micronaut.serde.annotation.Serdeable;
@@ -30,11 +30,11 @@ public class PerformanceController
     @Inject
     RepoBook pg;
 
-    private final List<String> isbns = new ArrayList<>();
+    private List<String> isbns;
     private final Random random = new Random();
 
     @Get("/title/{titleSearch}")
-    PerfResponse titleSearch(@NotBlank @QueryValue final String titleSearch)
+    public PerfResponse titleSearch(@NotBlank @QueryValue final String titleSearch)
     {
         final String pgTitleSearch = "%" + titleSearch + "%";
 
@@ -65,25 +65,22 @@ public class PerformanceController
         return new PerfResponse(esTime, pgTime);
     }
 
-    @Get("/random/isbn/refresh")
-    void refreshRandomIsbn()
-    {
-        // update the cached isbns for random access
-        this.isbns.clear();
-        this.isbns.addAll(this.es.findAllIsbn());
-        System.out.printf("Caching %d book isbns", this.isbns.size());
-    }
-
     @Get("/clean")
-    void clean()
+    public void clean()
     {
         LazyReferenceManager.get().cleanUp(Lazy.Checker(0.25));
         System.gc();
     }
 
     @Get("/random/isbn")
-    PerfResponse randomIsbn()
+    public PerfResponse randomIsbn(@Nullable @QueryValue final Boolean clearIsbns)
     {
+        if(clearIsbns != null && clearIsbns)
+        {
+            this.isbns = null;
+        }
+        this.ensureIsbns();
+
         final String isbn = this.isbns.get(this.random.nextInt(this.isbns.size()));
 
         final boolean esFound, pgFound;
@@ -112,14 +109,22 @@ public class PerformanceController
         return new PerfResponse(esTime, pgTime);
     }
 
+    void ensureIsbns()
+    {
+        if (this.isbns != null)
+        {
+            return;
+        }
+
+        this.isbns = this.es.findAllIsbn();
+        System.out.printf("Caching %d book isbns", this.isbns.size());
+    }
+
     private <T> Pair<T, Long> time(final Supplier<T> task)
     {
         final long startNs = System.nanoTime();
-
         final T result = task.get();
-
         final long timeNs = System.nanoTime() - startNs;
-
         return Pair.of(result, timeNs);
     }
 

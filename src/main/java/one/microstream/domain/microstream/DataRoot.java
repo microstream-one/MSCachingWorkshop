@@ -9,26 +9,31 @@ import org.eclipse.store.gigamap.lucene.LuceneContext;
 import org.eclipse.store.gigamap.lucene.LuceneIndex;
 import org.eclipse.store.gigamap.types.GigaMap;
 
-public class Company
+public class DataRoot
 {
-    public GigaMap<Book> gigaBooks = GigaMap.<Book>Builder()
+    private final GigaMap<Book> gigaBooks = GigaMap.<Book>Builder()
         .withBitmapIndex(BookIndices.POST_ID)
         .withBitmapIndex(BookIndices.ISBN)
         .build();
-    public Map<byte[], byte[]> debeziumOffsetStore = new HashMap<>();
+    private Map<byte[], byte[]> debeziumOffsetStore = new HashMap<>();
 
-    public Company()
+    public DataRoot()
     {
         this.gigaBooks.index().register(LuceneIndex.Category(LuceneContext.New(new BookDocumentPopulator())));
     }
 
     public GigaMap<Book> getGigaBooks()
     {
-        return gigaBooks;
+        return this.gigaBooks;
     }
 
     public Map<byte[], byte[]> getDebeziumOffsetStore()
     {
-        return debeziumOffsetStore;
+        return this.debeziumOffsetStore;
+    }
+
+    public void setDebeziumOffsetStore(final Map<byte[], byte[]> debeziumOffsetStore)
+    {
+        this.debeziumOffsetStore = debeziumOffsetStore;
     }
 }

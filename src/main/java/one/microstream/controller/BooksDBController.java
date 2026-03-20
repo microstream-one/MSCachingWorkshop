@@ -1,7 +1,6 @@
 package one.microstream.controller;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.http.HttpResponse;
@@ -10,9 +9,10 @@ import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import one.microstream.core.faker.DataFakerService;
 import one.microstream.core.mapper.MapperBook;
-import one.microstream.dao.microstream.postgres.PostDAOBook;
+import one.microstream.dao.postgres.PostDAOBook;
 import one.microstream.domain.postgres.PostBook;
 import one.microstream.dto.DtoBook;
 
@@ -20,29 +20,28 @@ import one.microstream.dto.DtoBook;
 public class BooksDBController
 {
     @Inject
-    PostDAOBook postDAOBook;
+    PostDAOBook dao;
     @Inject
     DataFakerService dataFakerService;
     @Inject
-    private MapperBook mapperBook;
+    MapperBook mapper;
 
-    @Post()
+    @Post
     @ExecuteOn(TaskExecutors.BLOCKING)
-    HttpResponse<?> insert(@Body DtoBook dto)
+    public PostBook insert(@NonNull @Body final DtoBook dto)
     {
-        PostBook inserted = postDAOBook.insert(dto);
-        return HttpResponse.ok(inserted);
+        return this.dao.insert(dto);
     }
 
     @Put("/update")
-    HttpResponse<?> updateBook(@Body DtoBook dto)
+    public HttpResponse<?> updateBook(@NonNull @Body final DtoBook dto)
     {
         try
         {
-            PostBook updated = postDAOBook.update(dto);
-            return HttpResponse.ok(mapperBook.toDto(updated));
+            final var book = this.dao.update(dto);
+            return HttpResponse.ok(this.mapper.toDto(book));
         }
-        catch (Exception ex)
+        catch (final Exception ignored)
         {
             return HttpResponse.notFound("Book to update not found");
         }
@@ -53,19 +52,19 @@ public class BooksDBController
     {
         try
         {
-            postDAOBook.delete(id);
+            this.dao.delete(id);
             return HttpResponse.ok("Book successfully deleted");
         }
-        catch (Exception ex)
+        catch (final Exception ignored)
         {
             return HttpResponse.notFound("Book to update not found");
         }
     }
 
     @Post("/createMockupBooks/{amount}")
-    long createMockupBooks(@NonNull @NotBlank @PathVariable Integer amount)
+    long createMockupBooks(@NonNull @Positive @PathVariable final Integer amount)
     {
-        final var split = dataFakerService.createBooks(amount).spliterator();
+        final var split = this.dataFakerService.createBooks(amount).spliterator();
         final int chunkSize = 100;
         long total = 0;
         while (true)
@@ -77,7 +76,7 @@ public class BooksDBController
             }
             if(chunk.isEmpty()) break;
             System.out.println("Inserting books at " + total);
-            this.postDAOBook.insertAll(chunk);
+            this.dao.insertAll(chunk);
         }
         return total;
     }
