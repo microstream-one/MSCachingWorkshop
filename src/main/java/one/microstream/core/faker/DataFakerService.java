@@ -14,7 +14,7 @@ public class DataFakerService
     public List<PostBook> createBooks(Integer amount)
     {
         // Faker mit deutscher Lokalisierung für realistischere Daten
-        Faker faker = new Faker(new Locale("de"));
+        Faker faker = new Faker(Locale.forLanguageTag("de"));
 
         List<PostBook> books = new ArrayList<>(amount);
 

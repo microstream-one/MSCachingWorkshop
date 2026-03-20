@@ -72,6 +72,13 @@ public class DebeziumEngineManager
             .notifying(this.changeHandler::handleChangeEvent)
             .build();
 
+        System.out.print("DEBEZIUM ROOT SIZE: ");
+        System.out.println(this.rootProvider.root().debeziumOffsetStore.size());
+        for(final var entry : this.rootProvider.root().debeziumOffsetStore.entrySet())
+        {
+            System.out.println("Entry key size: " + entry.getKey().length + ", value size: " + entry.getValue().length);
+        }
+
         this.debeziumThread = new Thread(this.engine, "debezium-engine");
         this.debeziumThread.start();
     }

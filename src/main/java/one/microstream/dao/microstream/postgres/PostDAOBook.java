@@ -31,6 +31,11 @@ public class PostDAOBook
         return this.repoBook.save(book);
     }
 
+    public List<PostBook> insertAll(final List<PostBook> books)
+    {
+        return this.repoBook.saveAll(books);
+    }
+
     public PostBook update(final DtoBook dto) throws RuntimeException
     {
         Optional<PostBook> byId = repoBook.findById(dto.id());

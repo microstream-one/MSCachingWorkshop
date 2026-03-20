@@ -65,7 +65,7 @@ public class PerformanceController
         return new PerfResponse(esTime, pgTime);
     }
 
-    @Post("/random/isbn/refresh")
+    @Get("/random/isbn/refresh")
     void refreshRandomIsbn()
     {
         // update the cached isbns for random access
