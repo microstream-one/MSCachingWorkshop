@@ -4,7 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import one.microstream.core.lucene.BookDocumentPopulator;
+import one.microstream.core.ollama.EmbeddingService;
 import one.microstream.domain.indices.BookIndices;
+import org.eclipse.store.gigamap.jvector.VectorIndex;
+import org.eclipse.store.gigamap.jvector.VectorIndexConfiguration;
+import org.eclipse.store.gigamap.jvector.VectorIndices;
+import org.eclipse.store.gigamap.jvector.VectorSimilarityFunction;
 import org.eclipse.store.gigamap.lucene.LuceneContext;
 import org.eclipse.store.gigamap.lucene.LuceneIndex;
 import org.eclipse.store.gigamap.types.GigaMap;
@@ -19,7 +24,15 @@ public class DataRoot
 
     public DataRoot()
     {
+        // register lucene index
         this.gigaBooks.index().register(LuceneIndex.Category(LuceneContext.New(new BookDocumentPopulator())));
+        // register vector index
+        final var vectorIndices = this.gigaBooks.index().register(VectorIndices.Category());
+        final var vectorIndexConfig = VectorIndexConfiguration.builder()
+            .dimension(384)
+            .similarityFunction(VectorSimilarityFunction.COSINE)
+            .build();
+        vectorIndices.add("embeddings", vectorIndexConfig, new EmbeddingService());
     }
 
     public GigaMap<Book> getGigaBooks()

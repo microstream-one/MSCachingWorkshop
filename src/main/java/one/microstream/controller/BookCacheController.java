@@ -1,9 +1,12 @@
 package one.microstream.controller;
 
+import java.util.List;
 
 import io.micronaut.core.annotation.NonNull;
-import io.micronaut.http.HttpResponse;
-import io.micronaut.http.annotation.*;
+import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.PathVariable;
+import io.micronaut.http.annotation.QueryValue;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
 import one.microstream.core.mapper.MapperBook;
@@ -12,9 +15,6 @@ import one.microstream.dao.microstream.DAOBook;
 import one.microstream.domain.microstream.Book;
 import one.microstream.dto.DtoBook;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Controller("/cache/books")
 public class BookCacheController
 {
@@ -22,28 +22,28 @@ public class BookCacheController
     DAOBook daoBook;
     @Inject
     MapperBook mapperBook;
-    @Inject
-    EmbeddingService embeddingService;
+
+    private final EmbeddingService embeddingService = new EmbeddingService();
 
     @Get("/page/{limit}")
-    List<DtoBook> pageAllBooks(@NonNull @NotBlank @PathVariable int limit)
+    List<DtoBook> pageAllBooks(@NonNull @PathVariable final int limit)
     {
-        return daoBook.pageBooks(limit).stream().map(b -> mapperBook.toDto(b))
-                .collect(Collectors.toUnmodifiableList());
+        return this.daoBook.pageBooks(limit).stream().map(this.mapperBook::toDto).toList();
     }
 
-    @Get("/search{?filter*}")
-    public HttpResponse<?> searchBooks(@RequestBean RBBookFilter filter)
+    @Get("/search")
+    public List<Book> searchBooks(
+        @NonNull @QueryValue final Float score,
+        @NonNull @NotBlank @QueryValue final String titleSearch
+    )
     {
-        float[] vectorize = embeddingService.vectorize(filter.title());
-        List<Book> books = daoBook.searchBooks(vectorize, filter.score());
-
-        return HttpResponse.ok(books);
+        final float[] vectorized = this.embeddingService.vectorize(titleSearch);
+        return this.daoBook.searchBooks(vectorized, score);
     }
 
-    @Get("/createVector/{text}")
-    float[] pageAllBooks(@NonNull @NotBlank @PathVariable String text)
+    @Get("/vectorize/{text}")
+    float[] pageAllBooks(@NonNull @NotBlank @PathVariable final String text)
     {
-        return embeddingService.vectorize(text);
+        return this.embeddingService.vectorize(text);
     }
 }

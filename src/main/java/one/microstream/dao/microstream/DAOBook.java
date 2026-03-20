@@ -2,30 +2,35 @@ package one.microstream.dao.microstream;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import io.micronaut.eclipsestore.RootProvider;
 import jakarta.inject.Singleton;
 import one.microstream.domain.indices.BookIndices;
 import one.microstream.domain.microstream.Book;
+import one.microstream.domain.microstream.DataRoot;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.WildcardQuery;
 import org.eclipse.datagrid.cluster.nodelibrary.types.ClusterLockScope;
 import org.eclipse.serializer.concurrency.LockedExecutor;
 import org.eclipse.store.gigamap.jvector.VectorIndex;
 import org.eclipse.store.gigamap.jvector.VectorIndices;
 import org.eclipse.store.gigamap.jvector.VectorSearchResult;
+import org.eclipse.store.gigamap.lucene.LuceneIndex;
 
 @Singleton
 public class DAOBook extends ClusterLockScope
 {
     private final DataRoot root;
     private final LuceneIndex<Book> luceneIndex;
+    private final VectorIndex<Book> vectorIndex;
 
     public DAOBook(final LockedExecutor lockedExecutor, final RootProvider<DataRoot> rootProvider)
     {
         super(lockedExecutor);
         this.root = rootProvider.root();
         //noinspection unchecked
-        this.luceneIndex = rootProvider.root().getGigaBooks().index().get(LuceneIndex.class);
+        this.luceneIndex = this.root.getGigaBooks().index().get(LuceneIndex.class);
+        this.vectorIndex = this.root.getGigaBooks().index().get(VectorIndices.Category()).get("embeddings");
     }
 
     public List<Book> pageBooks(final int limit)
@@ -112,20 +117,14 @@ public class DAOBook extends ClusterLockScope
         }));
     }
 
-    public List<Book> searchBooks(float[] filter, Float score)
+    public List<Book> searchBooks(final float[] filter, final float score)
     {
-        VectorIndices<Book> keyValues = company.root().gigaBooks.index().get(VectorIndices.Category());
-        VectorIndex<Book> index = keyValues.iterator().next().value();
-
-        VectorSearchResult<Book> result = index.search(filter, 100);
-
+        final var result = this.vectorIndex.search(filter, 100);
         result.forEach(entry ->
         {
             final Book similar = entry.entity();
             System.out.printf("%s, score=%s%n", similar.getTitle(), entry.score());
         });
-
-        return result.stream().filter(e -> e.score() >= score)
-            .map(vsr -> vsr.entity()).collect(Collectors.toUnmodifiableList());
+        return result.stream().filter(e -> e.score() >= score).map(VectorSearchResult.Entry::entity).toList();
     }
 }
