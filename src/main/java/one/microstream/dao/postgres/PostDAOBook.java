@@ -1,4 +1,4 @@
-package one.microstream.dao.microstream.postgres;
+package one.microstream.dao.postgres;
 
 import io.micronaut.core.annotation.NonNull;
 import jakarta.inject.Inject;
@@ -9,7 +9,6 @@ import one.microstream.domain.postgres.PostBook;
 import one.microstream.dto.DtoBook;
 import one.microstream.repositories.RepoBook;
 
-import javax.swing.text.html.StyleSheet;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,14 +22,17 @@ public class PostDAOBook
 
     public PostBook insert(final DtoBook book)
     {
-        final PostBook saved = this.repoBook.save(this.mapperBook.toNewPostBook(book));
-        return saved;
+        return this.repoBook.save(this.mapperBook.toNewPostBook(book));
     }
 
     public PostBook insert(final PostBook book)
     {
-        final PostBook saved = this.repoBook.save(book);
-        return saved;
+        return this.repoBook.save(book);
+    }
+
+    public List<PostBook> insertAll(final List<PostBook> books)
+    {
+        return this.repoBook.saveAll(books);
     }
 
     public PostBook update(final DtoBook dto) throws RuntimeException
@@ -54,5 +56,6 @@ public class PostDAOBook
     {
         return this.repoBook.findAll();
     }
+
 
 }

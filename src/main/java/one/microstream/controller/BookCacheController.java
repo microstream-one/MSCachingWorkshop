@@ -2,7 +2,6 @@ package one.microstream.controller;
 
 
 import io.micronaut.core.annotation.NonNull;
-import io.micronaut.data.model.Pageable;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.*;
 import jakarta.inject.Inject;
@@ -10,10 +9,8 @@ import jakarta.validation.constraints.NotBlank;
 import one.microstream.core.mapper.MapperBook;
 import one.microstream.core.ollama.EmbeddingService;
 import one.microstream.dao.microstream.DAOBook;
-import one.microstream.domain.indices.BookIndices;
 import one.microstream.domain.microstream.Book;
 import one.microstream.dto.DtoBook;
-import org.eclipse.store.gigamap.jvector.VectorIndex;
 
 import java.util.List;
 import java.util.stream.Collectors;

@@ -1,5 +1,7 @@
 package one.microstream.controller;
 
+import java.util.ArrayList;
+
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.*;
@@ -7,40 +9,40 @@ import io.micronaut.scheduling.TaskExecutors;
 import io.micronaut.scheduling.annotation.ExecuteOn;
 import jakarta.inject.Inject;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import one.microstream.core.faker.DataFakerService;
 import one.microstream.core.mapper.MapperBook;
-import one.microstream.dao.microstream.postgres.PostDAOBook;
+import one.microstream.dao.postgres.PostDAOBook;
 import one.microstream.domain.postgres.PostBook;
 import one.microstream.dto.DtoBook;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller("/db/books")
 public class BooksDBController
 {
     @Inject
-    PostDAOBook postDAOBook;
+    PostDAOBook dao;
     @Inject
     DataFakerService dataFakerService;
     @Inject
-    MapperBook mapperBook;
+    MapperBook mapper;
 
-    @Post()
+    @Post
     @ExecuteOn(TaskExecutors.BLOCKING)
-    HttpResponse<?> insert(@Body DtoBook dto)
+    public PostBook insert(@NonNull @Body final DtoBook dto)
     {
-        PostBook inserted = postDAOBook.insert(dto);
-        return HttpResponse.ok(inserted);
+        return this.dao.insert(dto);
     }
 
     @Put("/update")
-    HttpResponse<?> updateBook(@Body DtoBook dto)
+    public HttpResponse<?> updateBook(@NonNull @Body final DtoBook dto)
     {
-        try {
-            PostBook updated = postDAOBook.update(dto);
-            return HttpResponse.ok(mapperBook.toDto(updated));
-        } catch (Exception ex) {
+        try
+        {
+            final var book = this.dao.update(dto);
+            return HttpResponse.ok(this.mapper.toDto(book));
+        }
+        catch (final Exception ignored)
+        {
             return HttpResponse.notFound("Book to update not found");
         }
     }
@@ -48,20 +50,34 @@ public class BooksDBController
     @Delete("/delete/{id}")
     HttpResponse<?> deleteBook(@NonNull @NotBlank @PathVariable Integer id)
     {
-        try {
-            postDAOBook.delete(id);
+        try
+        {
+            this.dao.delete(id);
             return HttpResponse.ok("Book successfully deleted");
-        } catch (Exception ex) {
+        }
+        catch (final Exception ignored)
+        {
             return HttpResponse.notFound("Book to update not found");
         }
     }
 
     @Post("/createMockupBooks/{amount}")
-    HttpResponse<List<PostBook>> createMockupBooks(@NonNull @NotBlank @PathVariable Integer amount)
+    long createMockupBooks(@NonNull @Positive @PathVariable final Integer amount)
     {
-        List<PostBook> books = dataFakerService.createBooks(amount);
-        List<PostBook> postBooks = books.stream().map(book -> postDAOBook.insert(book))
-                .collect(Collectors.toUnmodifiableList());
-        return HttpResponse.ok(postBooks);
+        final var split = this.dataFakerService.createBooks(amount).spliterator();
+        final int chunkSize = 100;
+        long total = 0;
+        while (true)
+        {
+            final var chunk = new ArrayList<PostBook>(chunkSize);
+            for (int i = 0; i < chunkSize && split.tryAdvance(chunk::add); i++)
+            {
+                total++;
+            }
+            if(chunk.isEmpty()) break;
+            System.out.println("Inserting books at " + total);
+            this.dao.insertAll(chunk);
+        }
+        return total;
     }
 }
