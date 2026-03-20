@@ -65,7 +65,7 @@ public class DebeziumChangeHandler
                 this.daoBook.insert(book);
                 //// NOTE: Instead of inserting each one we store after every 500th entry to combat write spam
                 //this.rootProvider.root().gigaBooks.add(book);
-                LOG.info("Debezium INSERT/READ: Book with postId={} added to cache", book.getPostId());
+                //LOG.info("Debezium INSERT/READ: Book with postId={} added to cache", book.getPostId());
                 break;
             }
             case "u": // UPDATE
