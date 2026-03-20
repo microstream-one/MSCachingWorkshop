@@ -37,7 +37,7 @@ public class EmbeddingService extends Vectorizer<Book>
     @Override
     public float[] vectorize(final Book b)
     {
-        return this.model.embed(this.toEmbeddingText(b)).content().vector();
+        return this.vectorize(this.toEmbeddingText(b));
     }
 
     public float[] vectorize(final String text)
