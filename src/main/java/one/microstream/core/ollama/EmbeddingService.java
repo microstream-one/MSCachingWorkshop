@@ -15,7 +15,7 @@ public class EmbeddingService extends Vectorizer<Book>
 {
     private static final Logger LOG = LoggerFactory.getLogger(EmbeddingService.class);
     private static final String MODEL_URL = "http://localhost:11434";
-    private static final String MODEL_NAME = "all-minilm:l6-v2";
+    private static final String MODEL_NAME = "nomic-embed-text";
 
     private transient OllamaEmbeddingModel model;
 
@@ -54,6 +54,6 @@ public class EmbeddingService extends Vectorizer<Book>
 
     public String toEmbeddingText(final Book b)
     {
-        return String.format("Title: %s", b.getTitle());
+        return String.format("Book description: %s", b.getDescription());
     }
 }

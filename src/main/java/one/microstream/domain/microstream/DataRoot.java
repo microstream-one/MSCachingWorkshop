@@ -29,7 +29,7 @@ public class DataRoot
         // register vector index
         final var vectorIndices = this.gigaBooks.index().register(VectorIndices.Category());
         final var vectorIndexConfig = VectorIndexConfiguration.builder()
-            .dimension(384)
+            .dimension(768)
             .similarityFunction(VectorSimilarityFunction.COSINE)
             .build();
         vectorIndices.add("embeddings", vectorIndexConfig, new EmbeddingService());

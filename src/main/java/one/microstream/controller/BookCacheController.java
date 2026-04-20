@@ -42,7 +42,7 @@ public class BookCacheController
     }
 
     @Get("/vectorize/{text}")
-    float[] pageAllBooks(@NonNull @NotBlank @PathVariable final String text)
+    float[] vectorize(@NonNull @NotBlank @PathVariable final String text)
     {
         return this.embeddingService.vectorize(text);
     }
